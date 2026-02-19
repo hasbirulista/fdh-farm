@@ -1,0 +1,7 @@
+.nav-pills .nav-link.active{
+  background-color: rgb(75, 75, 75);
+  color: white;
+}
+.sidebartxt{
+  color: black;
+}
