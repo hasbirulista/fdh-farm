@@ -20,7 +20,7 @@
             padding: 30px 20px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -59,13 +59,13 @@
 
         .btn-custom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             color: var(--primary);
         }
     </style>
 
     <div class="mt-2">
-        
+
         {{-- HEADER --}}
         <div class="header-section">
             <h4>Distribusi Pakan</h4>
@@ -85,6 +85,12 @@
                 </div>
             @endif
         @endforeach
+        @if ($errors->has('stok'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ $errors->first('stok') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
 
         {{-- STOK PAKAN --}}
         <div class="row mb-3">
@@ -137,7 +143,7 @@
                                 <td>{{ \Carbon\Carbon::parse($distribusi->tanggal_distribusi)->format('d/m/Y') }}</td>
                                 <td>{{ $distribusi->kandang->nama_kandang }}</td>
                                 <td>{{ $distribusi->stokPakan->jenis_pakan }}</td>
-                                <td>{{ number_format($distribusi->jumlah_berat/1000, 2, ',', '.') }} kg</td>
+                                <td>{{ number_format($distribusi->jumlah_berat / 1000, 2, ',', '.') }} kg</td>
                                 <td>
                                     <div class="d-flex flex-column flex-md-row gap-1 justify-content-center">
                                         <a href="/dashboard/pakan/distribusi/{{ $distribusi->id }}/edit"
@@ -159,7 +165,8 @@
             </div>
 
             {{-- PAGINATION --}}
-            <div class="card-footer bg-white d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <div
+                class="card-footer bg-white d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
                 <div class="small text-muted">
                     Menampilkan {{ $data_distribusi->firstItem() ?? 0 }} – {{ $data_distribusi->lastItem() ?? 0 }} dari
                     {{ $data_distribusi->total() ?? 0 }} data

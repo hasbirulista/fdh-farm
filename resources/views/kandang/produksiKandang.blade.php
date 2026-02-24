@@ -520,6 +520,8 @@
                         <th>Kandang</th>
                         <th>Populasi</th>
                         <th>Usia</th>
+                        <th>Mati</th>
+                        <th>Apkir</th>
                         <th>Telur</th>
                         <th>Butir</th>
                         <th>Gram</th>
@@ -540,6 +542,8 @@
                             <td class="text-center fw-semibold">{{ $produksi->nama_kandang }}</td>
                             <td class="text-end">{{ number_format($produksi->populasi_ayam, 0, ',', '.') }}</td>
                             <td class="text-center">{{ $produksi->usia }}</td>
+                            <td class="text-end">{{ number_format($produksi->mati, 0, ',', '.') }}</td>
+                            <td class="text-end">{{ number_format($produksi->apkir, 0, ',', '.') }}</td>
                             <td class="text-center">{{ $produksi->jenis_telur }}</td>
                             <td class="text-end">{{ number_format($produksi->jumlah_butir, 0, ',', '.') }}</td>
                             <td class="text-end">{{ number_format($produksi->jumlah_gram, 0, ',', '.') }} gr</td>

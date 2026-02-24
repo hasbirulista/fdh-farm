@@ -221,60 +221,62 @@
                         </thead>
                         <tbody>
                             @foreach ($users as $user)
-                                <tr>
-                                    <td class="fw-semibold">{{ $user->username }}</td>
-                                    <td>{{ $user->nama }}</td>
-                                    <td>{{ $user->no_hp }}</td>
-
-                                    {{-- ROLE BADGE --}}
-                                    <td>
-                                        <span class="badge @if ($user->role == 'owner') bg-dark @elseif ($user->role == 'kepala_gudang') bg-warning @elseif ($user->role == 'kepala_kandang') bg-info @else bg-primary @endif">
-                                            {{ str_replace('_', ' ', ucfirst($user->role)) }}
-                                        </span>
-                                    </td>
-
-                                    {{-- KANDANG (Hidden on Mobile) --}}
-                                    <td class="d-none d-md-table-cell">
-                                        {{ $user->kandang->nama_kandang ?? '-' }}
-                                    </td>
-
-                                    {{-- AKSI DROPDOWN --}}
-                                    <td class="text-center">
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                                ⋮ Menu
-                                            </button>
-
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('users.edit', $user->id) }}">
-                                                        ✏️ Edit Profil
-                                                    </a>
-                                                </li>
-
-                                                @if ($user->role !== 'owner')
-                                                    <li><hr class="dropdown-divider"></li>
+                                @if($user->username !== 'superadmin')
+                                    <tr>
+                                        <td class="fw-semibold">{{ $user->username }}</td>
+                                        <td>{{ $user->nama }}</td>
+                                        <td>{{ $user->no_hp }}</td>
+    
+                                        {{-- ROLE BADGE --}}
+                                        <td>
+                                            <span class="badge @if ($user->role == 'owner') bg-dark @elseif ($user->role == 'kepala_gudang') bg-warning @elseif ($user->role == 'kepala_kandang') bg-info @else bg-primary @endif">
+                                                {{ str_replace('_', ' ', ucfirst($user->role)) }}
+                                            </span>
+                                        </td>
+    
+                                        {{-- KANDANG (Hidden on Mobile) --}}
+                                        <td class="d-none d-md-table-cell">
+                                            {{ $user->kandang->nama_kandang ?? '-' }}
+                                        </td>
+    
+                                        {{-- AKSI DROPDOWN --}}
+                                        <td class="text-center">
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                                    ⋮ Menu
+                                                </button>
+    
+                                                <ul class="dropdown-menu dropdown-menu-end">
                                                     <li>
-                                                        <form action="{{ route('users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button class="dropdown-item text-danger">
-                                                                🗑️ Hapus User
-                                                            </button>
-                                                        </form>
+                                                        <a class="dropdown-item" href="{{ route('users.edit', $user->id) }}">
+                                                            ✏️ Edit Profil
+                                                        </a>
                                                     </li>
-                                                @else
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li>
-                                                        <span class="dropdown-item text-muted" style="cursor: not-allowed;">
-                                                            🔒 Protected (Owner)
-                                                        </span>
-                                                    </li>
-                                                @endif
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
+    
+                                                    @if ($user->role !== 'owner')
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <form action="{{ route('users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button class="dropdown-item text-danger">
+                                                                    🗑️ Hapus User
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    @else
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <span class="dropdown-item text-muted" style="cursor: not-allowed;">
+                                                                🔒 Protected (Owner)
+                                                            </span>
+                                                        </li>
+                                                    @endif
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>

@@ -4,7 +4,7 @@
 @endphp
 @extends('partials.master')
 
-@section('content') 
+@section('content')
     <style>
         :root {
             --primary: #2d2d2d;
@@ -21,7 +21,7 @@
             padding: 30px 20px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
         }
 
         .header-section h4 {
@@ -61,7 +61,7 @@
             background: white;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
             border: 1px solid var(--border-light);
             text-decoration: none;
@@ -73,7 +73,7 @@
 
         .kandang-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
 
         .kandang-header {
@@ -253,13 +253,15 @@
 
     <div class="kandang-grid">
         @forelse ($kandangs as $kandang)
-            <a href="{{ route('produksi.perKandang', ['namaKandang' => $kandang->nama_kandang]) }}"
-                class="kandang-card">
-                <div class="kandang-header">
-                    <div class="kandang-icon">🐔</div>
-                    <h5 class="kandang-name">{{ $kandang->nama_kandang }} - {{ $kandang->chicken_in }}</h5>
-                </div>
+            <div class="kandang-card">
 
+                <a href="{{ route('produksi.perKandang', ['namaKandang' => $kandang->nama_kandang]) }}"
+                    class="text-decoration-none">
+                    <div class="kandang-header">
+                        <div class="kandang-icon">🐔</div>
+                        <h5 class="kandang-name">{{ $kandang->nama_kandang }} - {{ $kandang->chicken_in }}</h5>
+                    </div>
+                </a>
                 <div class="kandang-body">
                     <!-- Populasi Ayam -->
                     <div class="info-row">
@@ -270,28 +272,35 @@
                     <!-- Data Produksi Terakhir -->
                     @if ($kandang->lastProduksi)
                         <div class="production-section">
-                            <div class="production-title">📈 Produksi Terakhir <span style="font-size: 0.75rem; color: #999; margin-bottom: 12px; text-align: center;">({{ \Carbon\Carbon::parse($kandang->lastProduksi->tanggal_produksi)->translatedFormat('d F Y') }})</span></div>
-                            
+                            <div class="production-title">📈 Produksi Terakhir <span
+                                    style="font-size: 0.75rem; color: #999; margin-bottom: 12px; text-align: center;">({{ \Carbon\Carbon::parse($kandang->lastProduksi->tanggal_produksi)->translatedFormat('d F Y') }})</span>
+                            </div>
+
                             <div class="production-grid">
                                 <div class="production-item">
-                                    <div class="production-value">{{ $kandang->lastProduksi->jumlah_gram / 1000 }} Kg</div>
+                                    <div class="production-value">{{ $kandang->lastProduksi->jumlah_gram / 1000 }} Kg
+                                    </div>
                                     <div class="production-label">Berat Produksi</div>
                                 </div>
                                 <div class="production-item">
-                                    <div class="production-value">{{ number_format($kandang->lastProduksi->persentase_produksi, 2) }}%</div>
+                                    <div class="production-value">
+                                        {{ number_format($kandang->lastProduksi->persentase_produksi, 2) }}%</div>
                                     <div class="production-label">Persentase Produksi</div>
                                 </div>
                             </div>
                             <div class="production-grid" style="margin-top: 10px;">
                                 <div class="production-item">
-                                    <div class="production-value" style="color: #ff9800;">{{ $kandang->lastProduksi->usia }}</div>
+                                    <div class="production-value" style="color: #ff9800;">
+                                        {{ $kandang->lastProduksi->usia }}
+                                    </div>
                                     <div class="production-label">Usia (Minggu)</div>
                                 </div>
                                 <div class="production-item">
                                     <div class="production-value" style="color: #9c27b0;">
                                         @php
                                             $beratKg = $kandang->lastProduksi->jumlah_gram / 1000;
-                                            $butirPerKg = $beratKg > 0 ? $kandang->lastProduksi->jumlah_butir / $beratKg : 0;
+                                            $butirPerKg =
+                                                $beratKg > 0 ? $kandang->lastProduksi->jumlah_butir / $beratKg : 0;
                                         @endphp
                                         {{ number_format($butirPerKg, 2) }}
                                     </div>
@@ -307,7 +316,9 @@
 
                     <!-- Stok Pakan -->
                     <div>
-                        <div style="font-size: 0.85rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">🌾 Stok Pakan</div>
+                        <div
+                            style="font-size: 0.85rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+                            🌾 Stok Pakan</div>
                         <div class="pakan-info">
                             @php
                                 $grower = $kandang->kandangPakan->firstWhere('stokPakan.jenis_pakan', 'Grower');
@@ -317,17 +328,111 @@
                                 $layerKg = ($layer->stok ?? 0) / 1000;
                             @endphp
                             <div class="pakan-item">
-                                <div class="pakan-label">Grower</div>
-                                <div class="pakan-value">{{ number_format($growerKg, 2) }} kg</div>
+                                @if ($role === 'owner')
+                                    <button type="button" class="btn p-0 w-100 text-center" data-bs-toggle="modal"
+                                        data-bs-target="#modalGrower{{ $kandang->id }}">
+                                        <div class="pakan-label">Grower</div>
+                                        <div class="pakan-value">{{ number_format($growerKg, 2) }} kg</div>
+                                    </button>
+                                @else
+                                    <div class="pakan-label">Grower</div>
+                                    <div class="pakan-value">{{ number_format($growerKg, 2) }} kg</div>
+                                @endif
                             </div>
                             <div class="pakan-item">
-                                <div class="pakan-label">Layer</div>
-                                <div class="pakan-value">{{ number_format($layerKg, 2) }} kg</div>
+                                @if ($role === 'owner')
+                                    <button type="button" class="btn p-0 w-100 text-center" data-bs-toggle="modal"
+                                        data-bs-target="#modalLayer{{ $kandang->id }}">
+                                        <div class="pakan-label">Layer</div>
+                                        <div class="pakan-value">{{ number_format($layerKg, 2) }} kg</div>
+                                    </button>
+                                @else
+                                    <div class="pakan-label">Layer</div>
+                                    <div class="pakan-value">{{ number_format($layerKg, 2) }} kg</div>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
-            </a>
+            </div>
+            @if ($role === 'owner')
+                <div class="modal fade" id="modalGrower{{ $kandang->id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <form method="POST" action="{{ route('kandang.update.pakan') }}" class="modal-content">
+                            @csrf
+
+                            <input type="hidden" name="kandang_id" value="{{ $kandang->id }}">
+                            <input type="hidden" name="jenis_pakan" value="Grower">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    Update Stok Grower - {{ $kandang->nama_kandang }}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="input-group mb-3">
+                                    <input type="number" name="stok" class="form-control"
+                                        value="{{ $grower->stok ?? 0 }}" min="0" required>
+                                    <span class="input-group-text">Gram</span>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" required>
+                                    <label class="form-check-label">
+                                        Saya yakin ingin mengubah stok Grower
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
+            @if ($role === 'owner')
+                <div class="modal fade" id="modalLayer{{ $kandang->id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <form method="POST" action="{{ route('kandang.update.pakan') }}" class="modal-content">
+                            @csrf
+
+                            <input type="hidden" name="kandang_id" value="{{ $kandang->id }}">
+                            <input type="hidden" name="jenis_pakan" value="Layer">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    Update Stok Layer - {{ $kandang->nama_kandang }}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="input-group mb-3">
+                                    <input type="number" name="stok" class="form-control"
+                                        value="{{ $layer->stok ?? 0 }}" min="0" required>
+                                    <span class="input-group-text">Gram</span>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" required>
+                                    <label class="form-check-label">
+                                        Saya yakin ingin mengubah stok Layer
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
         @empty
             <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #999;">
                 <h5>📭 Belum ada data kandang</h5>

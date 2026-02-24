@@ -381,7 +381,7 @@
                                                 <div class="btn-group-action">
                                                     <button class="btn btn-sm btn-edit" data-bs-toggle="modal"
                                                         data-bs-target="#editKandangModal" data-id="{{ $kandang->id }}"
-                                                        data-nama="{{ $kandang->nama_kandang }}" data-populasi="{{ $kandang->populasi_ayam }}">
+                                                        data-nama="{{ $kandang->nama_kandang }}" data-chicken="{{ $kandang->chicken_in }}" data-populasi="{{ $kandang->populasi_ayam }}">
                                                         Edit
                                                     </button>
                                                     <button class="btn btn-sm btn-delete" data-bs-toggle="modal"
@@ -450,7 +450,10 @@
                         <label class="form-label">Nama</label>
                         <input type="text" name="nama_kandang" id="editNama" class="form-control" required>
                     </div>
-
+                    <div class="mb-3">
+                        <label class="form-label">Chicken In</label>
+                        <input type="text" name="chicken_in" id="editChickenIn" class="form-control" required>
+                    </div>
                     <div>
                         <label class="form-label">Populasi</label>
                         <input type="number" name="populasi_ayam" id="editPopulasi" class="form-control" required>
@@ -470,6 +473,7 @@
         editModal.addEventListener('show.bs.modal', function(event) {
             const button = event.relatedTarget;
             document.getElementById('editNama').value = button.dataset.nama;
+            document.getElementById('editChickenIn').value = button.dataset.chicken;
             document.getElementById('editPopulasi').value = button.dataset.populasi;
             document.getElementById('formEditKandang').action = `/dashboard/kandang/tambah-kandang/${button.dataset.id}`;
         });

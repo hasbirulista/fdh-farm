@@ -15,7 +15,7 @@
             padding: 40px 30px;
             border-radius: 12px;
             margin-bottom: 40px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
             animation: slideDown 0.5s ease;
         }
 
@@ -32,13 +32,13 @@
             padding: 30px;
             margin-bottom: 30px;
             border-left: 5px solid var(--primary);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .form-section:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
         }
 
         .form-section-title {
@@ -103,7 +103,7 @@
             border-radius: 8px;
             padding: 20px;
             text-align: center;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .result-box-label {
@@ -207,6 +207,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -218,6 +219,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -335,7 +337,8 @@
                 <div class="form-group">
                     <label for="jenis_telur" class="form-label">Jenis Telur</label>
                     <select id="jenis_telur" required name="jenis_telur" class="form-select">
-                        <option value="{{ $data_produksi->jenis_telur }}" selected>{{ $data_produksi->jenis_telur }}</option>
+                        <option value="{{ $data_produksi->jenis_telur }}" selected>{{ $data_produksi->jenis_telur }}
+                        </option>
                         @if ($data_produksi->jenis_telur == 'Omega')
                             <option value="Biasa">Biasa</option>
                         @else
@@ -377,18 +380,21 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="berat_pakan_per_ayam" class="form-label">Berat Pakan Per Ayam (gr)</label>
-                    <input type="number" step="0.01" id="berat_pakan_per_ayam" required name="berat_pakan_per_ayam" class="form-control" min="0"
+                    <input type="number" step="0.01" id="berat_pakan_per_ayam" required name="berat_pakan_per_ayam"
+                        class="form-control" min="0"
                         value="{{ $data_produksi->grower_per_ayam != 0 || $data_produksi->layer_per_ayam != 0 ? $data_produksi->grower_per_ayam + $data_produksi->layer_per_ayam : '' }}">
                 </div>
                 <div class="form-group">
                     <label for="persentase_grower" class="form-label">Persentase Grower (%)</label>
-                    <input type="number" step="0.01" id="persentase_grower" required name="persentase_grower" class="form-control" min="0"
-                        value="{{ $data_produksi->grower_per_ayam > 0 ? (($data_produksi->grower_per_ayam / ($data_produksi->grower_per_ayam + $data_produksi->layer_per_ayam)) * 100) : '' }}">
+                    <input type="number" step="0.01" id="persentase_grower" required name="persentase_grower"
+                        class="form-control" min="0"
+                        value="{{ $data_produksi->grower_per_ayam > 0 ? ($data_produksi->grower_per_ayam / ($data_produksi->grower_per_ayam + $data_produksi->layer_per_ayam)) * 100 : '' }}">
                 </div>
                 <div class="form-group">
                     <label for="persentase_layer" class="form-label">Persentase Layer (%)</label>
-                    <input type="number" step="0.01" id="persentase_layer" required name="persentase_layer" class="form-control" min="0"
-                        value="{{ $data_produksi->layer_per_ayam > 0 ? (($data_produksi->layer_per_ayam / ($data_produksi->grower_per_ayam + $data_produksi->layer_per_ayam)) * 100) : '' }}">
+                    <input type="number" step="0.01" id="persentase_layer" required name="persentase_layer"
+                        class="form-control" min="0"
+                        value="{{ $data_produksi->layer_per_ayam > 0 ? ($data_produksi->layer_per_ayam / ($data_produksi->grower_per_ayam + $data_produksi->layer_per_ayam)) * 100 : '' }}">
                 </div>
             </div>
 
@@ -440,25 +446,62 @@
             hitungProduksi();
         });
 
-        // HITUNG PAKAN TOTAL dengan persentase
+        // ===============================
+        // 🔢 HITUNG POPULASI AKTUAL
+        // ===============================
+        function getPopulasiAktual() {
+            const populasiAwal = parseFloat(document.getElementById('populasi_ayam').value) || 0;
+            const mati = parseFloat(document.querySelector('input[name="mati"]').value) || 0;
+            const apkir = parseFloat(document.querySelector('input[name="apkir"]').value) || 0;
+
+            const populasiAkhir = populasiAwal - mati - apkir;
+
+            return populasiAkhir > 0 ? populasiAkhir : 0;
+        }
+
+        // ===============================
+        // 🌾 HITUNG PAKAN
+        // ===============================
         function hitungPakan() {
-            const populasi = parseFloat(document.getElementById('populasi_ayam').value) || 0;
+            const populasi = getPopulasiAktual();
             const beratPerAyam = parseFloat(document.getElementById('berat_pakan_per_ayam').value) || 0;
             const persentaseGrower = parseFloat(document.getElementById('persentase_grower').value) || 0;
             const persentaseLayer = parseFloat(document.getElementById('persentase_layer').value) || 0;
 
-            // Hitung pakan grower: (persentase grower / 100) × berat per ayam × populasi
             const pakanGrower = (persentaseGrower / 100) * beratPerAyam * populasi;
-            // Hitung pakan layer: (persentase layer / 100) × berat per ayam × populasi
             const pakanLayer = (persentaseLayer / 100) * beratPerAyam * populasi;
 
             document.getElementById('pakan_A').textContent = pakanGrower.toFixed(2);
             document.getElementById('pakan_A_hidden').value = pakanGrower.toFixed(2);
+
             document.getElementById('pakan_B').textContent = pakanLayer.toFixed(2);
             document.getElementById('pakan_B_hidden').value = pakanLayer.toFixed(2);
         }
 
-        // Validasi persentase harus 100%
+        // ===============================
+        // 📊 HITUNG PERSENTASE PRODUKSI
+        // ===============================
+        function hitungProduksi() {
+            const populasi = getPopulasiAktual();
+            const butir = parseFloat(document.getElementById('jumlah_butir').value) || 0;
+
+            const view = document.getElementById('persentase_view');
+            const hidden = document.getElementById('persentase_produksi');
+
+            if (populasi > 0 && butir >= 0) {
+                const hasil = (butir / populasi) * 100;
+
+                view.textContent = hasil.toFixed(2) + '%';
+                hidden.value = hasil.toFixed(2);
+            } else {
+                view.textContent = '0.00%';
+                hidden.value = '';
+            }
+        }
+
+        // ===============================
+        // ✅ VALIDASI PERSENTASE 100%
+        // ===============================
         function validatePersentase() {
             const g = parseFloat(document.getElementById('persentase_grower').value) || 0;
             const l = parseFloat(document.getElementById('persentase_layer').value) || 0;
@@ -483,66 +526,86 @@
             }
         }
 
-        // Event listeners untuk semua input pakan
+        // ===============================
+        // 🎯 EVENT LISTENER
+        // ===============================
+
+        // Pakan
         document.getElementById('berat_pakan_per_ayam')
-            .addEventListener('input', function(){ validatePersentase(); hitungPakan(); });
+            .addEventListener('input', function() {
+                validatePersentase();
+                hitungPakan();
+            });
 
         document.getElementById('persentase_grower')
-            .addEventListener('input', function(){ validatePersentase(); hitungPakan(); });
+            .addEventListener('input', function() {
+                validatePersentase();
+                hitungPakan();
+            });
 
         document.getElementById('persentase_layer')
-            .addEventListener('input', function(){ validatePersentase(); hitungPakan(); });
+            .addEventListener('input', function() {
+                validatePersentase();
+                hitungPakan();
+            });
 
-        document.getElementById('populasi_ayam')
-            .addEventListener('input', function(){ validatePersentase(); hitungPakan(); });
-
-        // HITUNG PERSENTASE PRODUKSI
-        function hitungProduksi() {
-            const populasi = parseFloat(document.getElementById('populasi_ayam').value) || 0;
-            const butir = parseFloat(document.getElementById('jumlah_butir').value) || 0;
-
-            const view = document.getElementById('persentase_view');
-            const hidden = document.getElementById('persentase_produksi');
-
-            if (populasi > 0 && butir >= 0) {
-                const hasil = (butir / populasi) * 100;
-
-                view.textContent = hasil.toFixed(2) + '%';
-                hidden.value = hasil.toFixed(2);
-            } else {
-                view.textContent = '0.00%';
-                hidden.value = '';
-            }
-        }
-
-        document.getElementById('populasi_ayam')
-            .addEventListener('input', hitungProduksi);
-
+        // Produksi
         document.getElementById('jumlah_butir')
             .addEventListener('input', hitungProduksi);
 
+        // Mati & Apkir → update semua
+        document.querySelector('input[name="mati"]')
+            .addEventListener('input', function() {
+                hitungPakan();
+                hitungProduksi();
+            });
+
+        document.querySelector('input[name="apkir"]')
+            .addEventListener('input', function() {
+                hitungPakan();
+                hitungProduksi();
+            });
+
+        // ===============================
+        // 🏠 KETIKA PILIH KANDANG
+        // ===============================
         const kandangSelect = document.getElementById('kandang_select');
         const populasiInput = document.getElementById('populasi_ayam');
 
         kandangSelect.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const populasi = selectedOption.getAttribute('data-populasi');
+            const lastAgeInfo = document.getElementById('last-age-info');
 
             if (populasi) {
                 populasiInput.value = populasi;
+
+                const lastAge = selectedOption.getAttribute('data-last-age');
+                const lastDate = selectedOption.getAttribute('data-last-date');
+
+                if (lastAge && lastDate) {
+                    lastAgeInfo.innerHTML =
+                        `Produksi terakhir : usia <strong>${lastAge}</strong> minggu pada ${lastDate}`;
+                } else {
+                    lastAgeInfo.innerHTML = 'Belum ada produksi sebelumnya';
+                }
+
                 validatePersentase();
                 hitungPakan();
                 hitungProduksi();
             } else {
                 populasiInput.value = '';
+                lastAgeInfo.innerHTML = '';
             }
         });
 
-        // Cegah submit jika persentase tidak 100%
+        // ===============================
+        // 🚫 CEGAH SUBMIT JIKA ≠ 100%
+        // ===============================
         document.getElementById('produksiForm').addEventListener('submit', function(e) {
             const g = parseFloat(document.getElementById('persentase_grower').value) || 0;
             const l = parseFloat(document.getElementById('persentase_layer').value) || 0;
-            
+
             if ((g + l) !== 100) {
                 e.preventDefault();
                 alert('Total persentase Grower + Layer harus 100%');

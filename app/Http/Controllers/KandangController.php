@@ -40,6 +40,31 @@ class KandangController extends Controller
         ]);
     }
 
+    public function updatePakan(Request $request)
+    {
+        $request->validate([
+            'kandang_id' => 'required|exists:tb_kandang,id',
+            'jenis_pakan' => 'required|in:Grower,Layer',
+            'stok' => 'required|numeric|min:0',
+        ]);
+
+        $kandangPakan = KandangPakan::where('kandang_id', $request->kandang_id)
+            ->whereHas('stokPakan', function ($q) use ($request) {
+                $q->where('jenis_pakan', $request->jenis_pakan);
+            })
+            ->first();
+
+        if (!$kandangPakan) {
+            return back()->with('error', 'Data pakan tidak ditemukan.');
+        }
+
+        $kandangPakan->update([
+            'stok' => $request->stok, 
+        ]);
+
+        return back()->with('success', 'Stok pakan berhasil diperbarui.');
+    }
+
 
     /*
     PRODUKSI
@@ -352,7 +377,7 @@ class KandangController extends Controller
                 $produksi = Produksi::create([
                     'tanggal_produksi' => $request->tanggal_produksi,
                     'nama_kandang' => $kandang->nama_kandang,
-                    'populasi_ayam' => $request->populasi_ayam,
+                    'populasi_ayam' => $request->populasi_ayam - ($request->mati + $request->apkir),
                     'usia' => $request->usia,
                     'jenis_telur' => $request->jenis_telur,
                     'apkir' => $request->apkir,
@@ -440,7 +465,6 @@ class KandangController extends Controller
 
     public function updateProduksi($id, Request $request)
     {
-        // VALIDASI
         $request->validate([
             'tanggal_produksi' => 'required|date',
             'kandang_id' => 'required|exists:tb_kandang,id',
@@ -465,36 +489,52 @@ class KandangController extends Controller
             DB::transaction(function () use ($request, $id) {
 
                 /* ===============================
-             * 1️⃣ DATA LAMA (WAJIB DI AWAL)
+             * 1️⃣ AMBIL DATA LAMA
              * =============================== */
                 $produksi = Produksi::lockForUpdate()->findOrFail($id);
-                $beratPerAyam = (float) $request->berat_pakan_per_ayam;
-                $persentaseGrower = (float) $request->persentase_grower;
-                $persentaseLayer = (float) $request->persentase_layer;
+
+                $matiLama  = $produksi->mati;
+                $apkirLama = $produksi->apkir;
+                $totalLama = $matiLama + $apkirLama;
 
                 $jumlahGramLama = $produksi->jumlah_gram;
                 $pakanLamaA     = $produksi->pakan_A;
                 $pakanLamaB     = $produksi->pakan_B;
-
                 $jenisTelurLama = $produksi->jenis_telur;
-                $jenisTelurBaru = $request->jenis_telur;
-                $jumlahGramBaru = $request->jumlah_gram;
 
                 /* ===============================
              * 2️⃣ DATA KANDANG
              * =============================== */
-                $kandang = Kandang::where('nama_kandang', $produksi->nama_kandang)
-                    ->lockForUpdate()
-                    ->firstOrFail();
+                $kandang = Kandang::lockForUpdate()
+                    ->findOrFail($request->kandang_id);
 
                 /* ===============================
-             * 3️⃣ HITUNG ULANG PAKAN BARU
+             * 3️⃣ FIX POPULASI (PAKAI SELISIH)
              * =============================== */
+                $totalBaru = $request->mati + $request->apkir;
+                $selisih = $totalBaru - $totalLama;
+
+                if ($selisih > 0) {
+                    if ($kandang->populasi_ayam < $selisih) {
+                        throw new \Exception('Populasi ayam tidak mencukupi');
+                    }
+                    $kandang->decrement('populasi_ayam', $selisih);
+                } elseif ($selisih < 0) {
+                    $kandang->increment('populasi_ayam', abs($selisih));
+                }
+
+                /* ===============================
+             * 4️⃣ HITUNG ULANG PAKAN
+             * =============================== */
+                $beratPerAyam = (float) $request->berat_pakan_per_ayam;
+                $persentaseGrower = (float) $request->persentase_grower;
+                $persentaseLayer = (float) $request->persentase_layer;
+
                 $pakanBaruA = $request->populasi_ayam * ($beratPerAyam * ($persentaseGrower / 100));
                 $pakanBaruB = $request->populasi_ayam * ($beratPerAyam * ($persentaseLayer / 100));
 
                 /* ===============================
-             * 4️⃣ UPDATE STOK PAKAN KANDANG
+             * 5️⃣ UPDATE STOK PAKAN
              * =============================== */
                 $dataPakan = [
                     'Grower' => ['lama' => $pakanLamaA, 'baru' => $pakanBaruA],
@@ -503,8 +543,8 @@ class KandangController extends Controller
 
                 foreach ($dataPakan as $jenis => $nilai) {
 
-                    $selisih = $nilai['baru'] - $nilai['lama'];
-                    if ($selisih == 0) continue;
+                    $selisihPakan = $nilai['baru'] - $nilai['lama'];
+                    if ($selisihPakan == 0) continue;
 
                     $stokPakan = StokPakan::where('jenis_pakan', $jenis)
                         ->lockForUpdate()
@@ -515,45 +555,45 @@ class KandangController extends Controller
                         ->lockForUpdate()
                         ->firstOrFail();
 
-                    if ($selisih > 0) {
-                        if ($kandangPakan->stok < $selisih) {
+                    if ($selisihPakan > 0) {
+                        if ($kandangPakan->stok < $selisihPakan) {
                             throw new \Exception("Stok pakan $jenis tidak mencukupi");
                         }
-                        $kandangPakan->decrement('stok', $selisih);
+                        $kandangPakan->decrement('stok', $selisihPakan);
                     } else {
-                        $kandangPakan->increment('stok', abs($selisih));
+                        $kandangPakan->increment('stok', abs($selisihPakan));
                     }
                 }
 
                 /* ===============================
-             * 5️⃣ UPDATE PRODUKSI
+             * 6️⃣ UPDATE PRODUKSI
              * =============================== */
-
                 $produksi->update([
                     'tanggal_produksi' => $request->tanggal_produksi,
                     'nama_kandang' => $kandang->nama_kandang,
-                    'populasi_ayam' => $request->populasi_ayam,
+                    'populasi_ayam' => $kandang->populasi_ayam, // ambil dari kandang
                     'usia' => $request->usia,
-                    'jenis_telur' => $jenisTelurBaru,
+                    'jenis_telur' => $request->jenis_telur,
                     'apkir' => $request->apkir,
                     'mati' => $request->mati,
                     'jumlah_butir' => $request->jumlah_butir,
                     'jumlah_pecah' => $request->jumlah_pecah,
-                    'jumlah_gram' => $jumlahGramBaru,
+                    'jumlah_gram' => $request->jumlah_gram,
                     'grower_per_ayam' => $beratPerAyam * ($persentaseGrower / 100),
                     'layer_per_ayam' => $beratPerAyam * ($persentaseLayer / 100),
                     'pakan_A' => $pakanBaruA,
                     'pakan_B' => $pakanBaruB,
-                    'persentase_produksi' => ($request->jumlah_butir / $request->populasi_ayam) * 100,
+                    'persentase_produksi' => ($request->jumlah_butir / max($kandang->populasi_ayam, 1)) * 100,
                     'kegiatan' => $request->kegiatan,
                     'keterangan' => $request->keterangan,
                 ]);
 
                 /* ===============================
-             * 6️⃣ UPDATE STOK TELUR GUDANG (FIXED)
+             * 7️⃣ UPDATE STOK TELUR
              * =============================== */
+                $jenisTelurBaru = $request->jenis_telur;
+                $jumlahGramBaru = $request->jumlah_gram;
 
-                // JIKA JENIS TELUR SAMA
                 if ($jenisTelurLama === $jenisTelurBaru) {
 
                     $stokGudang = StokTelur::lockForUpdate()
@@ -561,11 +601,9 @@ class KandangController extends Controller
                         ->where('jenis_telur', $jenisTelurBaru)
                         ->firstOrFail();
 
-                    $selisihGram = $jumlahGramBaru - $jumlahGramLama;
-                    $stokGudang->increment('total_stok', $selisihGram);
+                    $stokGudang->increment('total_stok', $jumlahGramBaru - $jumlahGramLama);
                 } else {
 
-                    // KURANGI STOK TELUR LAMA
                     $stokGudangLama = StokTelur::lockForUpdate()
                         ->where('jenis_stok', 'gudang')
                         ->where('jenis_telur', $jenisTelurLama)
@@ -573,7 +611,6 @@ class KandangController extends Controller
 
                     $stokGudangLama->decrement('total_stok', $jumlahGramLama);
 
-                    // TAMBAH STOK TELUR BARU
                     $stokGudangBaru = StokTelur::lockForUpdate()
                         ->where('jenis_stok', 'gudang')
                         ->where('jenis_telur', $jenisTelurBaru)
@@ -583,7 +620,7 @@ class KandangController extends Controller
                 }
 
                 /* ===============================
-             * 7️⃣ UPDATE GUDANG MASUK
+             * 8️⃣ UPDATE GUDANG MASUK
              * =============================== */
                 $produksi->gudangMasuk()->update([
                     'tanggal_barang_masuk' => $request->tanggal_produksi,
@@ -596,7 +633,7 @@ class KandangController extends Controller
             });
 
             return redirect('/dashboard/kandang/produksi')
-                ->with('messageUpdateProduksi', 'Produksi & stok telur berhasil diupdate');
+                ->with('messageUpdateProduksi', 'Produksi & stok berhasil diupdate');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

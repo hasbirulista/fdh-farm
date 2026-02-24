@@ -75,6 +75,9 @@ Route::middleware(['auth', 'role:owner'])
 
         Route::post('/stok-telur/update', [EggGrowController::class, 'updateStokTelur'])
             ->name('stok.telur.toko');
+
+        Route::post('/kandang/update-pakan', [KandangController::class, 'updatePakan'])
+            ->name('kandang.update.pakan');
     });
 
 Route::middleware(['auth', 'role:owner'])
