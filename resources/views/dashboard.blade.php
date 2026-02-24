@@ -358,15 +358,39 @@
         });
 
         const kandangHarian = @json($produksiKandangHarian);
+
+        // Ambil semua tanggal unik dari semua kandang
+        const allDates = Array.from(
+            new Set(
+                Object.values(kandangHarian)
+                    .flat()
+                    .map(i => i.tanggal) // ambil tanggal full
+            )
+        ).sort(); // urutkan
+        
+        // Map tanggal menjadi hanya tanggal saja (19, 20, 21...)
+        const labels = allDates.map(d => new Date(d).getDate());
+        
         new Chart(document.getElementById('chartProduksiKandangHarian'), {
             type: 'line',
             data: {
-                labels: kandangHarian[Object.keys(kandangHarian)[0]]?.map(i => i.hari) ?? [],
+                labels: labels,
                 datasets: Object.keys(kandangHarian).map(k => ({
                     label: k,
-                    data: kandangHarian[k].map(i => i.produksi),
+                    data: allDates.map(date => {
+                        const found = kandangHarian[k].find(i => i.tanggal === date);
+                        return found ? found.produksi : 0;
+                    }),
                     tension: 0.3
                 }))
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                stacked: false,
             }
         });
 

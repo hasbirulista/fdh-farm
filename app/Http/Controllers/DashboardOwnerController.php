@@ -78,16 +78,29 @@ class DashboardOwnerController extends Controller
         // 🔹 Produksi Per Kandang Harian
         $produksiKandangHarian = Produksi::select(
             'nama_kandang',
-            DB::raw('DAY(tanggal_produksi) as hari'),
+            DB::raw('DATE(tanggal_produksi) as tanggal'),
             DB::raw('AVG(persentase_produksi) as produksi')
         )
-            ->whereMonth('tanggal_produksi', $bulan)
-            ->whereYear('tanggal_produksi', $tahun)
-            ->groupBy('nama_kandang', 'hari')
-            ->orderBy('nama_kandang')
-            ->orderBy('hari')
-            ->get()
-            ->groupBy('nama_kandang');
+        ->whereMonth('tanggal_produksi', $bulan)
+        ->whereYear('tanggal_produksi', $tahun)
+        ->groupBy('nama_kandang', 'tanggal')
+        ->orderBy('tanggal')
+        ->get()
+        ->groupBy('nama_kandang');
+        
+        // Ambil semua tanggal unik dari data produksi yang ada (urutan naik)
+        $labelProduksiKandangHarian = $produksiKandangHarian->mapWithKeys(function($items, $kandang){
+            return [$kandang => $items->pluck('tanggal')->map(fn($tgl) => \Carbon\Carbon::parse($tgl)->format('d'))];
+        });
+        
+        // Siapkan data chart per kandang
+        $dataProduksiKandangHarian = [];
+        foreach ($produksiKandangHarian as $namaKandang => $records) {
+            $dataProduksiKandangHarian[$namaKandang] = $labelProduksiKandangHarian->map(function($tanggal) use ($records){
+                $found = $records->firstWhere('tanggal', $tanggal);
+                return $found ? $found->produksi : 0; // 0 jika tidak ada data
+            });
+        }
 
         // 🔹 Produksi Per Kandang Bulanan
         // 🔹 Produksi Per Kandang Bulanan (NAMA BULAN)
@@ -193,6 +206,9 @@ class DashboardOwnerController extends Controller
             'dataProduksiBulananGlobal',
             'produksiKandangHarian',
             'produksiKandangBulanan',
+            
+            'labelProduksiKandangHarian',  // << tambahkan
+            'dataProduksiKandangHarian',   // << tambahkan
 
             // GUDANG
             'saldoGudang',
