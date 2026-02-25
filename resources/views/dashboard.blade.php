@@ -8,7 +8,7 @@
             padding: 30px 20px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -21,6 +21,17 @@
             font-weight: 700;
             font-size: 2rem;
             letter-spacing: -0.5px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .chart-wrapper {
+            min-width: 600px;
+            /* supaya bisa scroll kalau kandang banyak */
         }
     </style>
 
@@ -52,7 +63,7 @@
                                     Rp {{ number_format($saldoGudang) }}
                                 </h3>
                             </div>
-                            
+
                         </div>
                     </button>
                 </div>
@@ -69,7 +80,7 @@
                                     Rp {{ number_format($saldoToko) }}
                                 </h3>
                             </div>
-                            
+
                         </div>
                     </button>
                 </div>
@@ -104,7 +115,8 @@
         {{-- HEADER Gudang --}}
         <div class="mb-4 border-bottom pb-2">
             <h5 class="fw-bold mb-0">FDH FARM</h5>
-            <small class="text-muted">{{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }} {{ $tahun }}</small>
+            <small class="text-muted">{{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}
+                {{ $tahun }}</small>
         </div>
         {{-- ================= SUMMARY ================= --}}
         <div class="row g-3 mb-4">
@@ -119,7 +131,9 @@
             <div class="col-md-3 col-6">
                 <div class="card shadow-sm text-center">
                     <div class="card-body">
-                        <small class="text-muted">Total Produksi {{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }} {{ $tahun }}</small>
+                        <small class="text-muted">Total Produksi
+                            {{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}
+                            {{ $tahun }}</small>
                         <h3 class="fw-bold text-primary">{{ number_format($rataRataBulanIni ?? 0, 1) }}%</h3>
                     </div>
                 </div>
@@ -170,7 +184,8 @@
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <div class="card shadow-sm">
-                    <div class="card-header fw-semibold">Produksi Harian Bulan {{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}</div>
+                    <div class="card-header fw-semibold">Produksi Harian Bulan
+                        {{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}</div>
                     <div class="card-body">
                         <canvas id="chartProduksiHarian"></canvas>
                     </div>
@@ -190,9 +205,14 @@
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <div class="card shadow-sm">
-                    <div class="card-header fw-semibold">Produksi Kandang Harian Bulan {{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}</div>
+                    <div class="card-header fw-semibold">Produksi Kandang Harian Bulan
+                        {{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}</div>
                     <div class="card-body">
-                        <canvas id="chartProduksiKandangHarian"></canvas>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="chartProduksiKandangHarian"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -200,7 +220,11 @@
                 <div class="card shadow-sm">
                     <div class="card-header fw-semibold">Produksi Kandang Bulanan Tahun {{ $tahun }}</div>
                     <div class="card-body">
-                        <canvas id="chartProduksiKandangBulanan"></canvas>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="chartProduksiKandangBulanan"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -210,7 +234,8 @@
         {{-- HEADER Toko --}}
         <div class="mb-4 border-bottom pb-2">
             <h5 class="fw-bold mb-0">EGG GROW</h5>
-            <small class="text-muted">{{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }} {{ $tahun }}</small>
+            <small class="text-muted">{{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}
+                {{ $tahun }}</small>
         </div>
         <div class="row g-3 mb-4">
             <div class="col-md-3 col-6">
@@ -247,7 +272,8 @@
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <div class="card shadow-sm">
-                    <div class="card-header fw-semibold">Penjualan Harian Bulan {{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}</div>
+                    <div class="card-header fw-semibold">Penjualan Harian Bulan
+                        {{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}</div>
                     <div class="card-body">
                         <canvas id="chartPenjualanHarian"></canvas>
                     </div>
@@ -363,14 +389,14 @@
         const allDates = Array.from(
             new Set(
                 Object.values(kandangHarian)
-                    .flat()
-                    .map(i => i.tanggal) // ambil tanggal full
+                .flat()
+                .map(i => i.tanggal) // ambil tanggal full
             )
         ).sort(); // urutkan
-        
+
         // Map tanggal menjadi hanya tanggal saja (19, 20, 21...)
         const labels = allDates.map(d => new Date(d).getDate());
-        
+
         new Chart(document.getElementById('chartProduksiKandangHarian'), {
             type: 'line',
             data: {

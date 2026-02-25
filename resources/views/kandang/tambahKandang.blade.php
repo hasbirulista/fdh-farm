@@ -32,7 +32,7 @@
             background: white;
             border-radius: 8px;
             padding: 15px 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             flex: 1;
             min-width: 150px;
             text-align: center;
@@ -49,21 +49,6 @@
             font-size: 0.85rem;
             color: #666;
             margin-top: 5px;
-        }
-
-        .form-section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 4px solid #2d2d2d;
-        }
-
-        .form-section-title {
-            font-weight: 700;
-            color: #2d2d2d;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
         }
 
         .form-label {
@@ -101,7 +86,18 @@
 
         .btn-submit:hover {
             transform: translateY(-1px);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-add {
+            background: white;
+            color: #2d2d2d;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
         }
 
         .card {
@@ -146,10 +142,6 @@
             vertical-align: middle;
         }
 
-        .table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
         .btn-sm {
             padding: 5px 10px;
             font-size: 0.8rem;
@@ -159,19 +151,9 @@
             cursor: pointer;
         }
 
-        .btn-group-action {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-
         .btn-edit {
             background-color: #ffc107;
             color: #333;
-        }
-
-        .btn-edit:hover {
-            background-color: #ffb300;
         }
 
         .btn-delete {
@@ -179,21 +161,7 @@
             color: white;
         }
 
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
-
-        .card-footer {
-            background-color: #f5f5f5;
-            border-top: 1px solid #ddd;
-            padding: 10px 15px;
-            text-align: center;
-            font-size: 0.85rem;
-            color: #666;
-        }
-
         .modal-content {
-            border: none;
             border-radius: 8px;
         }
 
@@ -203,112 +171,47 @@
             border: none;
         }
 
-        .modal-title {
-            font-weight: 700;
-            font-size: 0.95rem;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            border: none;
-            color: white;
-            font-weight: 600;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
-            color: white;
-        }
-
-        .btn-warning {
-            background-color: #ffc107;
-            border: none;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .btn-warning:hover {
-            background-color: #ffb300;
-        }
-
         .btn-close {
             filter: brightness(0) invert(1);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .empty-state-icon {
-            font-size: 2rem;
-            margin-bottom: 12px;
-            opacity: 0.3;
-        }
-
-        @media (max-width: 768px) {
-            .header-section h4 {
-                font-size: 1.3rem;
-            }
-
-            .stat-card {
-                padding: 12px 15px;
-                min-width: 120px;
-            }
-
-            .stat-number {
-                font-size: 1.25rem;
-            }
-
-            .table {
-                font-size: 0.8rem;
-            }
-
-            .table thead th,
-            .table tbody td {
-                padding: 8px 10px;
-            }
-
-            .btn-sm {
-                padding: 4px 8px;
-                font-size: 0.75rem;
-            }
         }
     </style>
 
     <div class="mt-2">
-        <div class="header-section">
-            <h4>🏠 Kandang</h4>
-        </div>
 
-        @if ($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Error!</strong> Nama kandang sudah ada.
+        <div class="header-section d-flex justify-content-between align-items-center">
+            <h4>Kandang</h4>
+            <button class="btn-add" data-bs-toggle="modal" data-bs-target="#tambahKandangModal">
+                + Tambah Kandang
+            </button>
+        </div>
+        @if (session('messageTambahKandang'))
+            <div class="alert alert-success alert-dismissible fade show">
+                {{ session('messageTambahKandang') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
         @if (session('messageUpdateKandang'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                ✅ Berhasil update kandang
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if (session('messageTambahKandang'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                ✅ Berhasil tambah kandang
+            <div class="alert alert-warning alert-dismissible fade show">
+                {{ session('messageUpdateKandang') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
         @if (session('messageDeleteKandang'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                ✅ Berhasil hapus kandang
+            <div class="alert alert-danger alert-dismissible fade show">
+                {{ session('messageDeleteKandang') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
@@ -324,119 +227,85 @@
             </div>
         </div>
 
-        <div class="row g-3">
-            <div class="col-12 col-lg-4">
-                <div class="form-section">
-                    <h5 class="form-section-title">➕ Tambah Kandang</h5>
-
-                    <form action="/dashboard/kandang/tambah-kandang" method="POST">
-                        @csrf
-
-                        <div>
-                            <label class="form-label">Nama</label>
-                            <input type="text" required name="nama_kandang" class="form-control" placeholder="Nama kandang">
-                        </div>
-                        
-                        <div>
-                            <label class="form-label">Chick in</label>
-                            <input type="text" required name="chicken_in" class="form-control" placeholder="Chick in">
-                        </div>
-
-                        <div>
-                            <label class="form-label">Populasi</label>
-                            <input type="number" required name="populasi_ayam" class="form-control" placeholder="Jumlah ayam">
-                        </div>
-
-                        <button class="btn-submit" type="submit">Simpan</button>
-                    </form>
-                </div>
+        <div class="card">
+            <div class="card-header">
+                <h5>📋 Daftar Kandang</h5>
             </div>
 
-            <div class="col-12 col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>📋 Daftar Kandang</h5>
-                    </div>
-
-                    @if($data_kandang->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 40px">No</th>
-                                        <th>Nama</th>
-                                        <th>Chick in</th>
-                                        <th>Populasi</th>
-                                        <th style="width: 100px">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($data_kandang as $kandang)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $kandang->nama_kandang }}</td>
-                                            <td>{{ $kandang->chicken_in }}</td>
-                                            <td>{{ number_format($kandang->populasi_ayam) }}</td>
-                                            <td>
-                                                <div class="btn-group-action">
-                                                    <button class="btn btn-sm btn-edit" data-bs-toggle="modal"
-                                                        data-bs-target="#editKandangModal" data-id="{{ $kandang->id }}"
-                                                        data-nama="{{ $kandang->nama_kandang }}" data-chicken="{{ $kandang->chicken_in }}" data-populasi="{{ $kandang->populasi_ayam }}">
-                                                        Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-delete" data-bs-toggle="modal"
-                                                        data-bs-target="#hapus{{ $kandang->id }}">
-                                                        Hapus
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="card-footer">
-                            {{ $data_kandang->count() }} kandang
-                        </div>
-                    @else
-                        <div class="empty-state">
-                            <div class="empty-state-icon">🏠</div>
-                            <p>Belum ada kandang</p>
-                        </div>
-                    @endif
+            @if ($data_kandang->count() > 0)
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px">No</th>
+                                <th>Nama</th>
+                                <th>Chick in</th>
+                                <th>Anak Kandang</th>
+                                <th>Populasi</th>
+                                <th style="width: 100px">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($data_kandang as $kandang)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $kandang->nama_kandang }}</td>
+                                    <td>{{ $kandang->chicken_in }}</td>
+                                    <td>{{ $kandang->anak_kandang }}</td>
+                                    <td>{{ number_format($kandang->populasi_ayam) }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-edit" data-bs-toggle="modal"
+                                            data-bs-target="#editKandangModal" data-id="{{ $kandang->id }}"
+                                            data-nama="{{ $kandang->nama_kandang }}"
+                                            data-chicken="{{ $kandang->chicken_in }}"
+                                            data-anak="{{ $kandang->anak_kandang }}"
+                                            data-populasi="{{ $kandang->populasi_ayam }}">
+                                            Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-delete" data-bs-toggle="modal"
+                                            data-bs-target="#hapus{{ $kandang->id }}">
+                                            Hapus
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            @endif
+        </div>
+    </div>
+    <div class="modal fade" id="hapus{{ $kandang->id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <form action="/dashboard/kandang/tambah-kandang/{{ $kandang->id }}" method="POST" class="modal-content">
+                @csrf
+                @method('DELETE')
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Hapus Kandang</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    Yakin ingin menghapus kandang
+                    <strong>{{ $kandang->nama_kandang }}</strong> ?
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        Hapus
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    @foreach ($data_kandang as $kandang)
-        <div class="modal fade" id="hapus{{ $kandang->id }}" tabindex="-1">
-            <div class="modal-dialog">
-                <form action="/dashboard/kandang/tambah-kandang/{{ $kandang->id }}" method="POST" class="modal-content">
-                    @csrf
-                    @method('DELETE')
-
-                    <div class="modal-header">
-                        <h5 class="modal-title">Hapus Kandang</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        Hapus kandang <strong>{{ $kandang->nama_kandang }}</strong>?
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-delete">Hapus</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endforeach
-
     <div class="modal fade" id="editKandangModal" tabindex="-1">
         <div class="modal-dialog">
-            <form method="POST" id="formEditKandang" class="modal-content">
+            <form method="POST" class="modal-content">
                 @csrf
                 @method('PUT')
 
@@ -446,36 +315,77 @@
                 </div>
 
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nama</label>
-                        <input type="text" name="nama_kandang" id="editNama" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Chicken In</label>
-                        <input type="text" name="chicken_in" id="editChickenIn" class="form-control" required>
-                    </div>
-                    <div>
-                        <label class="form-label">Populasi</label>
-                        <input type="number" name="populasi_ayam" id="editPopulasi" class="form-control" required>
-                    </div>
+                    <label class="form-label">Nama</label>
+                    <input type="text" name="nama_kandang" class="form-control" required>
+
+                    <label class="form-label">Chick in</label>
+                    <input type="text" name="chicken_in" class="form-control" required>
+
+                    <label class="form-label">Anak Kandang</label>
+                    <input type="text" name="anak_kandang" class="form-control" required>
+
+                    <label class="form-label">Populasi</label>
+                    <input type="number" name="populasi_ayam" class="form-control" required>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-warning">Simpan</button>
+                    <button type="submit" class="btn btn-warning">Update</button>
                 </div>
             </form>
         </div>
     </div>
 
+    {{-- MODAL TAMBAH --}}
+    <div class="modal fade" id="tambahKandangModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form action="/dashboard/kandang/tambah-kandang" method="POST" class="modal-content">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Kandang</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Nama</label>
+                    <input type="text" required name="nama_kandang" class="form-control">
+
+                    <label class="form-label">Chick in</label>
+                    <input type="text" required name="chicken_in" class="form-control">
+
+                    <label class="form-label">Anak Kandang</label>
+                    <input type="text" required name="anak_kandang" class="form-control">
+
+                    <label class="form-label">Populasi</label>
+                    <input type="number" required name="populasi_ayam" class="form-control">
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-warning">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script>
         const editModal = document.getElementById('editKandangModal');
-        editModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            document.getElementById('editNama').value = button.dataset.nama;
-            document.getElementById('editChickenIn').value = button.dataset.chicken;
-            document.getElementById('editPopulasi').value = button.dataset.populasi;
-            document.getElementById('formEditKandang').action = `/dashboard/kandang/tambah-kandang/${button.dataset.id}`;
-        });
+
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', function(event) {
+
+                const button = event.relatedTarget;
+
+                const id = button.getAttribute('data-id');
+                const nama = button.getAttribute('data-nama');
+                const chicken = button.getAttribute('data-chicken');
+                const anak = button.getAttribute('data-anak');
+                const populasi = button.getAttribute('data-populasi');
+
+                const form = editModal.querySelector('form');
+
+                form.action = `/dashboard/kandang/tambah-kandang/${id}`; // 🔥 INI YANG BENAR kalau resource
+
+                form.querySelector('input[name="nama_kandang"]').value = nama;
+                form.querySelector('input[name="chicken_in"]').value = chicken;
+                form.querySelector('input[name="anak_kandang"]').value = anak;
+                form.querySelector('input[name="populasi_ayam"]').value = populasi;
+            });
+        }
     </script>
 @endsection

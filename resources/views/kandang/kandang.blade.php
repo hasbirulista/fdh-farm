@@ -259,7 +259,7 @@
                     class="text-decoration-none">
                     <div class="kandang-header">
                         <div class="kandang-icon">🐔</div>
-                        <h5 class="kandang-name">{{ $kandang->nama_kandang }} - {{ $kandang->chicken_in }}</h5>
+                        <h6 class="kandang-name">{{ $kandang->nama_kandang }} - {{ $kandang->chicken_in }} - {{ $kandang->anak_kandang }}</h6>
                     </div>
                 </a>
                 <div class="kandang-body">

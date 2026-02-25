@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nama_kandang');
             $table->string('chicken_in');
             $table->integer('populasi_ayam');
+            $table->string('anak_kandang')->nullable();
             $table->timestamps();
         });
     }

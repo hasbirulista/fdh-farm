@@ -59,7 +59,7 @@ class KandangController extends Controller
         }
 
         $kandangPakan->update([
-            'stok' => $request->stok, 
+            'stok' => $request->stok,
         ]);
 
         return back()->with('success', 'Stok pakan berhasil diperbarui.');
@@ -589,6 +589,29 @@ class KandangController extends Controller
                 ]);
 
                 /* ===============================
+                * 9️⃣ RECALCULATE PRODUKSI SETELAHNYA
+                * =============================== */
+
+                $produksiSelanjutnya = Produksi::where('nama_kandang', $kandang->nama_kandang)
+                    ->where('tanggal_produksi', '>', $request->tanggal_produksi)
+                    ->orderBy('tanggal_produksi')
+                    ->lockForUpdate()
+                    ->get();
+
+                $populasiRunning = $kandang->populasi_ayam;
+
+                foreach ($produksiSelanjutnya as $item) {
+
+                    $totalKeluar = $item->mati + $item->apkir;
+
+                    $item->update([
+                        'populasi_ayam' => $populasiRunning
+                    ]);
+
+                    $populasiRunning -= $totalKeluar;
+                }
+
+                /* ===============================
              * 7️⃣ UPDATE STOK TELUR
              * =============================== */
                 $jenisTelurBaru = $request->jenis_telur;
@@ -735,12 +758,20 @@ class KandangController extends Controller
             'nama_kandang' => 'required|unique:tb_kandang,nama_kandang',
             'chicken_in' => 'required',
             'populasi_ayam' => 'required|numeric',
+            Rule::unique('tb_kandang', 'nama_kandang'),
+        ],[
+            'nama_kandang.required' => 'Nama kandang wajib diisi.',
+            'nama_kandang.unique' => 'Nama kandang sudah ada, silakan gunakan nama lain.',
+            'chicken_in.required' => 'Chick in wajib diisi.',
+            'populasi_ayam.required' => 'Populasi ayam wajib diisi.',
+            'populasi_ayam.numeric' => 'Populasi ayam harus berupa angka.',
         ]);
 
         //tambah data ke tb_kandang
         kandang::create([
             'nama_kandang' => $request->nama_kandang,
             'chicken_in' => $request->chicken_in,
+            'anak_kandang' => $request->anak_kandang,
             'populasi_ayam' => $request->populasi_ayam,
         ]);
 
@@ -754,13 +785,21 @@ class KandangController extends Controller
                 'required',
                 Rule::unique('tb_kandang', 'nama_kandang')->ignore($id),
             ],
+            'chicken_in' => 'required',
             'populasi_ayam' => 'required|numeric',
+        ], [
+            'nama_kandang.required' => 'Nama kandang wajib diisi.',
+            'nama_kandang.unique' => 'Nama kandang sudah ada, silakan gunakan nama lain.',
+            'chicken_in.required' => 'Chick in wajib diisi.',
+            'populasi_ayam.required' => 'Populasi ayam wajib diisi.',
+            'populasi_ayam.numeric' => 'Populasi ayam harus berupa angka.',
         ]);
 
-        //tambah data ke tb_kandang
+        // update data
         kandang::where('id', $id)->update([
             'nama_kandang' => $request->nama_kandang,
             'chicken_in' => $request->chicken_in,
+            'anak_kandang' => $request->anak_kandang,
             'populasi_ayam' => $request->populasi_ayam,
         ]);
 
