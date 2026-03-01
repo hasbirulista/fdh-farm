@@ -81,22 +81,22 @@ class DashboardOwnerController extends Controller
             DB::raw('DATE(tanggal_produksi) as tanggal'),
             DB::raw('AVG(persentase_produksi) as produksi')
         )
-        ->whereMonth('tanggal_produksi', $bulan)
-        ->whereYear('tanggal_produksi', $tahun)
-        ->groupBy('nama_kandang', 'tanggal')
-        ->orderBy('tanggal')
-        ->get()
-        ->groupBy('nama_kandang');
-        
+            ->whereMonth('tanggal_produksi', $bulan)
+            ->whereYear('tanggal_produksi', $tahun)
+            ->groupBy('nama_kandang', 'tanggal')
+            ->orderBy('tanggal')
+            ->get()
+            ->groupBy('nama_kandang');
+
         // Ambil semua tanggal unik dari data produksi yang ada (urutan naik)
-        $labelProduksiKandangHarian = $produksiKandangHarian->mapWithKeys(function($items, $kandang){
+        $labelProduksiKandangHarian = $produksiKandangHarian->mapWithKeys(function ($items, $kandang) {
             return [$kandang => $items->pluck('tanggal')->map(fn($tgl) => \Carbon\Carbon::parse($tgl)->format('d'))];
         });
-        
+
         // Siapkan data chart per kandang
         $dataProduksiKandangHarian = [];
         foreach ($produksiKandangHarian as $namaKandang => $records) {
-            $dataProduksiKandangHarian[$namaKandang] = $labelProduksiKandangHarian->map(function($tanggal) use ($records){
+            $dataProduksiKandangHarian[$namaKandang] = $labelProduksiKandangHarian->map(function ($tanggal) use ($records) {
                 $found = $records->firstWhere('tanggal', $tanggal);
                 return $found ? $found->produksi : 0; // 0 jika tidak ada data
             });
@@ -146,9 +146,16 @@ class DashboardOwnerController extends Controller
 
         /* ========================== DASHBOARD TOKO ========================== */
 
+        /* ========================== DASHBOARD TOKO ========================== */
+
         $saldoToko = Saldo::where('jenis_saldo', 'toko')->value('jumlah_saldo') ?? 0;
 
-        // 🔹 Penjualan Harian (filter bulan & tahun)
+        // 🔹 Penjualan bulan terpilih (FIXED)
+        $penjualanTokoBulanIni = Transaksi::whereMonth('tanggal_transaksi', $bulan)
+            ->whereYear('tanggal_transaksi', $tahun)
+            ->sum('total_harga');
+
+        // 🔹 Penjualan Harian (untuk chart)
         $penjualanHarian = Transaksi::select(
             DB::raw('DATE(tanggal_transaksi) as tanggal'),
             DB::raw('SUM(total_harga) as total')
@@ -162,7 +169,7 @@ class DashboardOwnerController extends Controller
         $labelPenjualanHarian = $penjualanHarian->pluck('tanggal');
         $dataPenjualanHarian = $penjualanHarian->pluck('total');
 
-        // 🔹 Penjualan Bulanan
+        // 🔹 Penjualan Bulanan (untuk chart tahunan)
         $penjualanBulanan = Transaksi::select(
             DB::raw('MONTH(tanggal_transaksi) as bulan'),
             DB::raw('SUM(total_harga) as total')
@@ -176,8 +183,6 @@ class DashboardOwnerController extends Controller
             ->map(fn($b) => \Carbon\Carbon::create()->month($b)->translatedFormat('F'));
 
         $dataPenjualanBulanan = $penjualanBulanan->pluck('total');
-
-        $penjualanTokoBulanIni = $dataPenjualanBulanan->sum();
 
         $pengeluaranTokoBulanIni = PengeluaranToko::whereMonth('tanggal', $bulan)
             ->whereYear('tanggal', $tahun)
@@ -206,7 +211,7 @@ class DashboardOwnerController extends Controller
             'dataProduksiBulananGlobal',
             'produksiKandangHarian',
             'produksiKandangBulanan',
-            
+
             'labelProduksiKandangHarian',  // << tambahkan
             'dataProduksiKandangHarian',   // << tambahkan
 
