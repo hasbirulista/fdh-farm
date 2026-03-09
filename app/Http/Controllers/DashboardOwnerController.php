@@ -166,7 +166,8 @@ class DashboardOwnerController extends Controller
             ->orderBy('tanggal')
             ->get();
 
-        $labelPenjualanHarian = $penjualanHarian->pluck('tanggal');
+        $labelPenjualanHarian = $penjualanHarian->pluck('tanggal')
+            ->map(fn($tgl) => \Carbon\Carbon::parse($tgl)->format('j'));
         $dataPenjualanHarian = $penjualanHarian->pluck('total');
 
         // 🔹 Penjualan Bulanan (untuk chart tahunan)
