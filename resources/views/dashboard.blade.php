@@ -141,16 +141,16 @@
             <div class="col-md-3 col-6">
                 <div class="card shadow-sm text-center">
                     <div class="card-body">
-                        <small class="text-muted">Telur Hari Ini</small>
-                        <h3 class="fw-bold">{{ number_format($telurHariIni->total_butir ?? 0) }}</h3>
+                        <small class="text-muted">Populasi Ayam</small>
+                        <h3 class="fw-bold">{{ number_format($totalPopulasi ?? 0) }}</h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="card shadow-sm text-center">
                     <div class="card-body">
-                        <small class="text-muted">Populasi Ayam</small>
-                        <h3 class="fw-bold">{{ number_format($totalPopulasi ?? 0) }}</h3>
+                        <small class="text-muted">Harga Telur Hari Ini</small>
+                        <h3 class="fw-bold">Rp {{ number_format($hargaTelurHariIni ?? 0) }}</h3>
                     </div>
                 </div>
             </div>
@@ -158,23 +158,40 @@
 
         {{-- ================= GUDANG ================= --}}
         <div class="row g-3 mb-4">
-            <div class="col-md-6 col-6">
+            <div class="col-md-3 col-6">
                 <div class="card shadow-sm text-center">
                     <div class="card-body">
-                        <small class="text-muted">Pemasukkan</small>
-                        <h5 class="fw-bold text-success">
-                            Rp {{ number_format($pemasukkanGudangBulanIni) }}
-                        </h5>
+                        <small class="text-muted">Butir Telur Hari Ini</small>
+                        <h3 class="fw-bold">{{ number_format($telurHariIni->total_butir ?? 0) }}</h3>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-6">
+            <div class="col-md-3 col-6">
+                <div class="card shadow-sm text-center">
+                    <div class="card-body">
+                        <small class="text-muted">Berat Telur Hari Ini</small>
+                        <h3 class="fw-bold">{{ number_format($telurHariIni->total_gram/1000 ?? 0) }} Kg</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-6">
+                <div class="card shadow-sm text-center">
+                    <div class="card-body">
+                        <small class="text-muted">Pemasukkan</small>
+                        <h3 class="fw-bold text-success">
+                            Rp {{ number_format($pemasukkanGudangBulanIni) }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
                 <div class="card shadow-sm text-center">
                     <div class="card-body">
                         <small class="text-muted">Pengeluaran</small>
-                        <h5 class="fw-bold text-danger">
+                        <h3 class="fw-bold text-danger">
                             Rp {{ number_format($pengeluaranGudangBulanIni) }}
-                        </h5>
+                        </h3>
                     </div>
                 </div>
             </div>

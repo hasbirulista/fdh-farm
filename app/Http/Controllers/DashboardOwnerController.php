@@ -144,6 +144,10 @@ class DashboardOwnerController extends Controller
             ->whereYear('tanggal_barang_keluar', $tahun)
             ->sum('total_harga');
 
+        $hargaTelurHariIni = GudangBarangKeluar::whereDate('tanggal_barang_keluar', $hariIni)
+            ->where('jenis_barang', 'telur')
+            ->avg('harga_kilo');
+
         /* ========================== DASHBOARD TOKO ========================== */
 
         /* ========================== DASHBOARD TOKO ========================== */
@@ -222,6 +226,7 @@ class DashboardOwnerController extends Controller
             'stokGudangBiasaKg',
             'pengeluaranGudangBulanIni',
             'pemasukkanGudangBulanIni',
+            'hargaTelurHariIni',
 
             // TOKO
             'saldoToko',

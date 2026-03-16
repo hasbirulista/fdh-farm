@@ -473,8 +473,10 @@ class EggGrowController extends Controller
                         'jumlah_saldo' => 'Saldo toko belum tersedia.'
                     ]);
                 }
-
-                $saldo->increment('jumlah_saldo', $request->total_harga);
+                // kurangi saldo lama hanya jika transaksi lama bukan kredit
+                if ($request->pembayaran != 'Kredit') {
+                    $saldo->increment('jumlah_saldo', $request->total_harga);
+                }
             });
         } catch (ValidationException $e) {
             return back()
@@ -541,7 +543,10 @@ class EggGrowController extends Controller
                     ]);
                 }
 
-                $saldo->decrement('jumlah_saldo', $transaksi->total_harga);
+                // kurangi saldo lama hanya jika transaksi lama bukan kredit
+                if ($transaksi->pembayaran != 'Kredit') {
+                    $saldo->decrement('jumlah_saldo', $transaksi->total_harga);
+                }
 
                 // 4️⃣ Ambil stok telur BARU
                 $stokTelurBaru = StokTelur::where('jenis_stok', 'toko')
@@ -576,7 +581,10 @@ class EggGrowController extends Controller
 
                 // 6️⃣ Kurangi stok & tambah saldo BARU
                 $stokTelurBaru->decrement('total_stok', $request->total_berat);
-                $saldo->increment('jumlah_saldo', $request->total_harga);
+                // tambah saldo baru jika bukan kredit
+                if ($request->pembayaran != 'Kredit') {
+                    $saldo->increment('jumlah_saldo', $request->total_harga);
+                }
             });
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
@@ -1002,5 +1010,58 @@ class EggGrowController extends Controller
         return redirect()
             ->route('egg-grow.pengeluaran')
             ->with('messageDeletePengeluaran', 'Pengeluaran berhasil dihapus');
+    }
+
+    public function kredit()
+    {
+        $data = Transaksi::with('pelanggan')
+            ->where('pembayaran', 'kredit')
+            ->orderBy('tanggal_transaksi', 'desc')
+            ->get();
+
+        return view('egg-grow.kredit.kredit', compact('data'), [
+            'page' => 'Egg Grow'
+        ]);
+    }
+
+    public function lunas(Request $request, $id)
+    {
+        $request->validate([
+            'pembayaran' => 'required|in:Tunai,Transfer',
+        ]);
+
+        try {
+
+            DB::transaction(function () use ($request, $id) {
+
+                // 1️⃣ Ambil transaksi
+                $transaksi = Transaksi::lockForUpdate()->findOrFail($id);
+
+                // 2️⃣ Ambil saldo toko
+                $saldo = Saldo::where('jenis_saldo', 'toko')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$saldo) {
+                    throw ValidationException::withMessages([
+                        'saldo' => 'Saldo toko belum tersedia.'
+                    ]);
+                }
+
+                // 3️⃣ Jika sebelumnya kredit maka saldo bertambah
+                if ($transaksi->pembayaran == 'Kredit') {
+                    $saldo->increment('jumlah_saldo', $transaksi->total_harga);
+                }
+
+                // 4️⃣ Update metode pembayaran
+                $transaksi->update([
+                    'pembayaran' => $request->pembayaran
+                ]);
+            });
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat melunaskan transaksi.');
+        }
+
+        return redirect()->back()->with('success', 'Transaksi berhasil dilunaskan');
     }
 }

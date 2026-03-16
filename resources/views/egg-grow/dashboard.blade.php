@@ -159,11 +159,11 @@
             </div>
 
             <div class="col">
-                <a href="/dashboard/egg-grow/barang-masuk" class="menu-card">
+                <a href="/dashboard/egg-grow/kredit" class="menu-card">
                     <div class="card">
                         <div class="card-body">
-                            <i class="fi fi-rr-download"></i>
-                            <h6 class="mb-0">Barang Masuk</h6>
+                            <i class="fi fi-rr-credit-card"></i>
+                            <h6 class="mb-0">Kredit</h6>
                         </div>
                     </div>
                 </a>
@@ -202,6 +202,16 @@
                 </a>
             </div>
 
+            <div class="col">
+                <a href="/dashboard/egg-grow/barang-masuk" class="menu-card">
+                    <div class="card">
+                        <div class="card-body">
+                            <i class="fi fi-rr-download"></i>
+                            <h6 class="mb-0">Barang Masuk</h6>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
 
     </div>

@@ -51,6 +51,7 @@
                 <th>Gram</th>
                 <th>Produksi (%)</th>
                 <th>Butir/Kg</th>
+                <th>Pakan</th>
                 <th>Kegiatan</th>
                 <th>Keterangan</th>
             </tr>
@@ -72,6 +73,7 @@
                     <td class="text-right">
                         {{ number_format($produksi->jumlah_butir / ($produksi->jumlah_gram / 1000), 2, ',', '.') }}
                     </td>
+                    <td class="text-center">{{ $produksi->grower_per_ayam + $produksi->layer_per_ayam }} gr</td>
                     <td class="text-left">{{ $produksi->kegiatan ?? '-' }}</td>
                     <td class="text-left">{{ $produksi->keterangan ?? '-' }}</td>
                 </tr>

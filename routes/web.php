@@ -219,6 +219,12 @@ Route::middleware(['auth', 'role:owner,admin_toko'])
         // FOLLOW UP REPEAT ORDER
         // ======================
         Route::get('/follow-up', [RepeatOrderController::class, 'followUp'])->name('follow-up');
+
+        // ======================
+        // FOLLOW UP KREDIT
+        // ======================
+        Route::get('/kredit', [EggGrowController::class, 'kredit'])->name('egg-grow.kredit');
+        Route::put('/kredit/lunas/{id}', [EggGrowController::class, 'lunas'])->name('kredit.lunas');
     });
 
 /*

@@ -190,8 +190,13 @@
                         <option value="{{ $transaksi->pembayaran }}" selected>{{ $transaksi->pembayaran }}</option>
                         @if ($transaksi->pembayaran == 'Tunai')
                             <option value="Transfer">Transfer</option>
+                            <option value="Kredit">Kredit</option>
+                        @elseif($transaksi->pembayaran == 'Transfer')
+                            <option value="Tunai">Tunai</option>
+                            <option value="Kredit">Kredit</option>
                         @else
                             <option value="Tunai">Tunai</option>
+                            <option value="Transfer">Transfer</option>
                         @endif
                     </select>
                 </div>

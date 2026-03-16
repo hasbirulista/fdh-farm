@@ -217,6 +217,7 @@
                         <option value="" disabled selected>Pilih Metode Pembayaran</option>
                         <option value="Tunai" {{ old('pembayaran') == 'Tunai' ? 'selected' : '' }}>Tunai</option>
                         <option value="Transfer" {{ old('pembayaran') == 'Transfer' ? 'selected' : '' }}>Transfer</option>
+                        <option value="Kredit" {{ old('pembayaran') == 'Kredit' ? 'selected' : '' }}>Kredit</option>
                     </select>
                 </div>
             </div>

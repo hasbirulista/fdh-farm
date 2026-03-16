@@ -524,8 +524,9 @@
                         <th>Apkir</th>
                         <th>Telur</th>
                         <th>Butir</th>
-                        <th>Gram</th>
+                        <th>Gram Telur</th>
                         <th>Telur Pecah</th>
+                        <th>Pakan</th>
                         <th>Produksi</th>
                         <th>Butir/Kg</th>
                         <th>Kegiatan</th>
@@ -548,6 +549,7 @@
                             <td class="text-end">{{ number_format($produksi->jumlah_butir, 0, ',', '.') }}</td>
                             <td class="text-end">{{ number_format($produksi->jumlah_gram, 0, ',', '.') }} gr</td>
                             <td class="text-center">{{ $produksi->jumlah_pecah }}</td>
+                            <td class="text-center">{{ $produksi->grower_per_ayam + $produksi->layer_per_ayam }} gr</td>
 
                             <td class="text-center">
                                 <span
