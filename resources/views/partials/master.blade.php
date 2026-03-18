@@ -212,6 +212,13 @@
                                             </a>
                                         </li>
                                     @endif
+                                    @if ($role === 'owner')
+                                        <li>
+                                            <a class="dropdown-item" href="/dashboard/kandang/tambah-kandang">
+                                                Data Kandang
+                                            </a>
+                                        </li>
+                                    @endif
                                 </ul>
                             </li>
                         </ul>
@@ -254,6 +261,8 @@
                                     <li><a class="dropdown-item" href="/dashboard/egg-grow/pelanggan">Pelanggan</a>
                                     </li>
                                     <li><a class="dropdown-item" href="/dashboard/egg-grow/transaksi">Transaksi</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/dashboard/egg-grow/kredit">Kredit</a>
                                     </li>
                                     <li><a class="dropdown-item" href="/dashboard/egg-grow/follow-up">Follow Up</a>
                                     </li>

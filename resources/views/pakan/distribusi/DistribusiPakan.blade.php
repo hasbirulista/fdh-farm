@@ -62,6 +62,26 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             color: var(--primary);
         }
+        .header-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-section h4 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+        }
     </style>
 
     <div class="mt-2">
@@ -70,6 +90,9 @@
         <div class="header-section">
             <h4>Distribusi Pakan</h4>
             <div class="header-buttons">
+                <a href="/dashboard/kandang/" class="btn-custom">
+                    ← Kembali ke Dashboard
+                </a>
                 <a href="/dashboard/pakan/distribusi/tambah" class="btn-custom">
                     ➕ Tambah Distribusi
                 </a>

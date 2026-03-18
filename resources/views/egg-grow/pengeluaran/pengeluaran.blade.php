@@ -68,6 +68,9 @@
             <h4>Data Pengeluaran</h4>
 
             <div class="header-buttons">
+                <a href="/dashboard/egg-grow/" class="btn-custom">
+                    ← Kembali Ke Dashboard
+                </a>
                 <a href="{{ route('egg-grow.tambahPengeluaran') }}" class="btn-custom">
                     ➕ Tambah Pengeluaran
                 </a>

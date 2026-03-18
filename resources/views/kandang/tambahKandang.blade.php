@@ -174,16 +174,74 @@
         .btn-close {
             filter: brightness(0) invert(1);
         }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-section h4 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-custom {
+            background: white;
+            color: #2d2d2d;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            color: #2d2d2d;
+        }
     </style>
 
     <div class="mt-2">
 
-        <div class="header-section d-flex justify-content-between align-items-center">
-            <h4>Kandang</h4>
-            <button class="btn-add" data-bs-toggle="modal" data-bs-target="#tambahKandangModal">
-                + Tambah Kandang
-            </button>
+        <div class="header-section">
+            <h4>Data Kandang</h4>
+            <div class="header-buttons">
+                <a href="/dashboard/kandang/" class="btn-custom">
+                    ← Kembali Ke Dashboard
+                </a>
+                <button class="btn-custom" data-bs-toggle="modal" data-bs-target="#tambahKandangModal">
+                    ➕ Tambah Kandang
+                </button>
+            </div>
         </div>
+
+
+
+
         @if (session('messageTambahKandang'))
             <div class="alert alert-success alert-dismissible fade show">
                 {{ session('messageTambahKandang') }}

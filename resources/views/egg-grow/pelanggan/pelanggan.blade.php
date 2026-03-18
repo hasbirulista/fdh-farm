@@ -72,6 +72,9 @@
         <div class="header-section">
             <h4>Pelanggan</h4>
             <div class="header-buttons">
+                <a href="/dashboard/egg-grow/" class="btn-custom">
+                    ← Kembali Ke Dashboard
+                </a>
                 <a href="/dashboard/egg-grow/pelanggan/tambah" class="btn-custom">
                     ➕ Tambah Pelanggan
                 </a>

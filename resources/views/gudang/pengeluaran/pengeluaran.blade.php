@@ -72,6 +72,9 @@
         <div class="header-section">
             <h4>Data Pengeluaran</h4>
             <div class="header-buttons">
+                <a href="/dashboard/gudang/" class="btn-custom">
+                    ← Kembali Ke Dashboard
+                </a>
                 <a href="{{ route('gudang.tambahPengeluaran') }}" class="btn-custom">
                     ➕ Tambah Pengeluaran
                 </a>

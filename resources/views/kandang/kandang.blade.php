@@ -239,15 +239,125 @@
             .kandang-body {
                 padding: 15px;
             }
+
+            .menu-card {
+                padding: 15px 10px;
+            }
+
+            .menu-icon {
+                font-size: 28px;
+            }
+
+            .menu-title {
+                font-size: 0.9rem;
+            }
+
+            .menu-desc {
+                font-size: 0.7rem;
+            }
+        }
+
+        .menu-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+        }
+
+        .menu-icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .menu-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .menu-desc {
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .btn-custom {
+            background: white;
+            color: var(--primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            color: var(--primary);
+        }
+
+        .btn-custom.primary {
+            background: linear-gradient(135deg, var(--success) 0%, #1e7e34 100%);
+            color: white;
+        }
+
+        .btn-custom.primary:hover {
+            color: white;
+        }
+
+        .btn-custom.print {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+
+        .btn-custom.print:hover {
+            color: white;
         }
     </style>
 
     <div class="header-section d-flex justify-content-between align-items-center flex-wrap gap-3 mt-2">
         <div>
-            <h4>Manajemen Kandang</h4>
+            <h4>Dashboard Kandang</h4>
         </div>
+        
+    </div>
+    <div class="menu-dashboard">
+        <a href="/dashboard/kandang/produksi" class="menu-card">
+            <div class="menu-icon">🥚</div>
+            <div class="menu-title">Produksi</div>
+        </a>
+
+        <a href="/dashboard/pakan/distribusi" class="menu-card">
+            <div class="menu-icon">🌾</div>
+            <div class="menu-title">Distribusi Pakan</div>
+        </a>
         @if ($role === 'owner')
-            <a href="/dashboard/kandang/tambah-kandang" class="btn-add-kandang">+ Tambah Kandang</a>
+            <a href="/dashboard/kandang/tambah-kandang" class="menu-card">
+                <div class="menu-icon">🏠</div>
+                <div class="menu-title">Data Kandang</div>
+            </a>
         @endif
     </div>
 
@@ -259,7 +369,8 @@
                     class="text-decoration-none">
                     <div class="kandang-header">
                         <div class="kandang-icon">🐔</div>
-                        <h6 class="kandang-name">{{ $kandang->nama_kandang }} - {{ $kandang->chicken_in }} - {{ $kandang->anak_kandang }}</h6>
+                        <h6 class="kandang-name">{{ $kandang->nama_kandang }} - {{ $kandang->chicken_in }} -
+                            {{ $kandang->anak_kandang }}</h6>
                     </div>
                 </a>
                 <div class="kandang-body">

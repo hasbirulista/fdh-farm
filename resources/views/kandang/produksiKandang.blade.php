@@ -392,8 +392,11 @@
             </h4>
         </div>
         <div class="header-buttons">
+            <a href="/dashboard/kandang/" class="btn-custom">
+                ← Kembali ke Dashboard
+            </a>
             <a href="/dashboard/kandang/produksi/tambah" class="btn-custom">
-                + Tambah Produksi
+                ➕ Tambah Produksi
             </a>
 
             @php
@@ -409,7 +412,7 @@
                         '_t' => time(),
                     ]) }}"
                         target="_blank" class="btn-custom print">
-                        🖨️ Cetak Laporan
+                        🖨️ Cetak
                     </a>
                 @endif
             @endif

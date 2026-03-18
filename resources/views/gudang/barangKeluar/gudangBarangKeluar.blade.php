@@ -93,6 +93,9 @@
         <div class="header-section">
             <h4>Barang Keluar</h4>
             <div class="header-buttons">
+                <a href="/dashboard/gudang/" class="btn-custom">
+                    ← Kembali Ke Dashboard
+                </a>
                 <a href="/dashboard/gudang/barang-keluar/tambah" class="btn-custom primary">+ Tambah Barang Keluar</a>
 
                 {{-- CETAK LAPORAN --}}

@@ -1015,14 +1015,15 @@ class EggGrowController extends Controller
     public function kredit()
     {
         $data = Transaksi::with('pelanggan')
-            ->where('pembayaran', 'kredit')
+            ->where('pembayaran', 'Kredit')
             ->orderBy('tanggal_transaksi', 'desc')
-            ->get();
+            ->paginate(10);
 
         return view('egg-grow.kredit.kredit', compact('data'), [
             'page' => 'Egg Grow'
         ]);
     }
+
 
     public function lunas(Request $request, $id)
     {

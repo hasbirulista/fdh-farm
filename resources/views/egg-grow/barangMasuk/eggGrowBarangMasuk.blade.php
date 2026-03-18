@@ -69,15 +69,18 @@
     <div class="mt-2">
         {{-- HEADER --}}
         <div class="header-section">
-            <h4>Barang Masuk</h4>
+            <h4>Barang Masuk</h4>         
             <div class="header-buttons">
+                <a href="/dashboard/egg-grow/" class="btn-custom">
+                    ← Kembali ke Dashboard
+                </a>
                 {{-- CETAK LAPORAN --}}
                 @if ($bulan !== 'all')
                     <a href="{{ route('eggGrow.barangMasuk.cetak', ['bulan' => request('bulan'), 'tahun' => request('tahun'), '_t' => time()]) }}"
                         target="_blank" class="btn-custom print">
                         🖨️ Cetak Barang Masuk
                     </a>
-                @endif
+                @endif                
             </div>
         </div>
 

@@ -84,6 +84,9 @@
         <div class="header-section">
             <h4>Barang Masuk</h4>
             <div class="header-buttons">
+                <a href="/dashboard/gudang/" class="btn-custom">
+                    ← Kembali Ke Dashboard
+                </a>
                 {{-- CETAK LAPORAN --}}
                 @if ($bulan !== 'all')
                     <a href="{{ route('barangMasuk.cetak', [

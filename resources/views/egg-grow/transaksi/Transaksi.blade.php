@@ -77,19 +77,22 @@
             <h4>Transaksi Penjualan</h4>
 
             <div class="header-buttons">
+                <a href="/dashboard/egg-grow/" class="btn-custom">
+                    ← Kembali
+                </a>
                 <a href="/dashboard/egg-grow/transaksi/tambah" class="btn-custom">
                     ➕ Tambah Transaksi
                 </a>
 
                 <a href="/dashboard/egg-grow/pelanggan-ranking" class="btn-custom ranking">
-                    🏆 Ranking Pelanggan
+                    🏆 Ranking
                 </a>
 
                 {{-- CETAK LAPORAN --}}
                 @if ($bulan !== 'all')
                     <a href="{{ route('transaksi.cetak', ['bulan' => $bulan, 'tahun' => $tahun, '_t' => time()]) }}"
                         target="_blank" class="btn-custom print">
-                        🖨️ Cetak Laporan
+                        🖨️ Cetak
                     </a>
                 @endif
             </div>

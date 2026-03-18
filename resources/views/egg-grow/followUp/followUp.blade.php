@@ -27,12 +27,43 @@
             font-size: 2rem;
             letter-spacing: -0.5px;
         }
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-custom {
+            background: white;
+            color: #2d2d2d;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            color: #2d2d2d;
+        }
     </style>
 
     <div class="mt-2">
         {{-- HEADER --}}
         <div class="header-section">
             <h4>Follow Up / Repeat Order</h4>
+            <div class="header-buttons">
+                <a href="/dashboard/egg-grow/" class="btn-custom">
+                    ← Kembali Ke Dashboard
+                </a>
+            </div>
         </div>
 
         <div class="card shadow-sm">
