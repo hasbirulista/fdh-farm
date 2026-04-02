@@ -27,6 +27,10 @@ class EggGrowController extends Controller
         // ===== SALDO TOKO =====
         $saldoToko = Saldo::where('jenis_saldo', 'toko')->first();
         $saldoTokoValue = $saldoToko ? $saldoToko->jumlah_saldo : 0;
+        $saldoTokoCredit = Transaksi::where('pembayaran', 'Kredit');
+        $saldoTokoCreditValue = $saldoTokoCredit ? $saldoTokoCredit->sum('total_harga') : 0;
+
+
 
         // ===== STOK TELUR TOKO =====
         $stokTelurOmegaToko = StokTelur::where('jenis_stok', 'toko')
@@ -56,6 +60,19 @@ class EggGrowController extends Controller
             $profitHariIni += ($hargaJual - $hargaBeli);
         }
 
+        // ===== HARGA RATA-RATA PER JENIS TELUR =====
+        $hargaOmega = Transaksi::whereDate('tanggal_transaksi', $hariIni)
+            ->where('jenis_telur', 'Omega')
+            ->avg('harga_jual_kilo');
+
+        $hargaBiasa = Transaksi::whereDate('tanggal_transaksi', $hariIni)
+            ->where('jenis_telur', 'Biasa')
+            ->avg('harga_jual_kilo');
+
+        // default kalau null
+        $hargaOmega = $hargaOmega ?? 0;
+        $hargaBiasa = $hargaBiasa ?? 0;
+
         // ===== KIRIM DATA KE VIEW =====
         return view('egg-grow.dashboard', [
             'page' => 'Egg Grow',
@@ -68,7 +85,12 @@ class EggGrowController extends Controller
             'stok_telur_omega_toko_raw' => $omegaGram,
             'stok_telur_biasa_toko_raw' => $biasaGram,
 
+            'saldo_telur_omega' => ($omegaGram / 1000) * $hargaOmega,
+            'saldo_telur_biasa' => ($biasaGram / 1000) * $hargaBiasa,
             'saldo_toko' => $saldoTokoValue,
+            'saldo_toko_credit' => $saldoTokoCreditValue,
+            'harga_telur_omega' => $hargaOmega,
+            'harga_telur_biasa' => $hargaBiasa,
             'profit_hari_ini' => $profitHariIni,
         ]);
     }
@@ -89,6 +111,24 @@ class EggGrowController extends Controller
             ]);
 
         return back()->with('success', 'Stok berhasil diperbarui');
+    }
+
+    public function hargaByDate(Request $request)
+    {
+        $tanggal = $request->tanggal;
+
+        $omega = Transaksi::whereDate('tanggal_transaksi', $tanggal)
+            ->where('jenis_telur', 'Omega')
+            ->avg('harga_jual_kilo') ?? 0;
+
+        $biasa = Transaksi::whereDate('tanggal_transaksi', $tanggal)
+            ->where('jenis_telur', 'Biasa')
+            ->avg('harga_jual_kilo') ?? 0;
+
+        return response()->json([
+            'omega' => number_format($omega, 0, ',', '.'),
+            'biasa' => number_format($biasa, 0, ',', '.')
+        ]);
     }
 
 

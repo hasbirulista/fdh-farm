@@ -27,11 +27,13 @@
             font-size: 2rem;
             letter-spacing: -0.5px;
         }
+
         .header-buttons {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
+
         .btn-custom {
             background: white;
             color: #2d2d2d;
@@ -50,10 +52,23 @@
 
         .btn-custom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             color: #2d2d2d;
         }
+
+        body.modal-open .card:hover {
+            transform: none !important;
+        }
+
+        body.modal-open .dashboard-card:hover {
+            transform: none !important;
+        }
+
+        .modal {
+            will-change: transform;
+        }
     </style>
+
     <div class="mt-2">
         <div class="header-section">
             <h4>Kredit</h4>
@@ -119,63 +134,6 @@
                                     </button>
                                 </td>
                             </tr>
-                            <!-- Modal -->
-                            <div class="modal fade" id="modalLunas{{ $item->id }}">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Konfirmasi Pelunasan</h5>
-                                            <button class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-
-                                        <div class="modal-body">
-                                            Apakah anda akan mengupdate data ini menjadi <b>lunas</b>? <br>
-                                            <br>
-                                            <b>Data Transaksi</b> <br>
-                                            Nama : {{ $item->pelanggan->nama_pelanggan }} <br>
-                                            Total Harga : Rp {{ number_format($item->total_harga) }} <br>
-                                            Pembayaran : {{ $item->pembayaran }} <br>
-
-
-                                        </div>
-
-                                        <div class="modal-footer">
-
-                                            <form action="{{ route('kredit.lunas', $item->id) }}" method="POST">
-                                                @csrf
-                                                @method('PUT')
-                                                <br>
-                                                <label for="pembayaran">Ubah Metode Pembayaran:</label>
-                                                <select id="pembayaran" name="pembayaran" class="form-control" required>
-                                                    <option value="{{ $item->pembayaran }}" selected>
-                                                        {{ $item->pembayaran }}
-                                                    </option>
-                                                    @if ($item->pembayaran == 'Tunai')
-                                                        <option value="Transfer">Transfer</option>
-                                                        <option value="Kredit">Kredit</option>
-                                                    @elseif($item->pembayaran == 'Transfer')
-                                                        <option value="Tunai">Tunai</option>
-                                                        <option value="Kredit">Kredit</option>
-                                                    @else
-                                                        <option value="Tunai">Tunai</option>
-                                                        <option value="Transfer">Transfer</option>
-                                                    @endif
-                                                </select>
-                                                <button class="btn btn-success">
-                                                    Ya, Lunas
-                                                </button>
-                                            </form>
-
-                                            <button class="btn btn-secondary" data-bs-dismiss="modal">
-                                                Batal
-                                            </button>
-
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
                         @empty
                             <tr>
                                 <td colspan="8" class="text-center py-4">
@@ -185,6 +143,64 @@
                         @endforelse
                     </tbody>
                 </table>
+                @foreach ($data as $item)
+                    <div class="modal fade" id="modalLunas{{ $item->id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Konfirmasi Pelunasan</h5>
+                                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                {{-- FORM PINDAH KE BODY --}}
+                                <form action="{{ route('kredit.lunas', $item->id) }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+
+                                    <div class="modal-body">
+                                        Apakah anda akan mengupdate data ini menjadi <b>lunas</b>? <br><br>
+
+                                        <b>Data Transaksi</b><br>
+                                        Nama : {{ $item->pelanggan->nama_pelanggan }} <br>
+                                        Total Harga : Rp {{ number_format($item->total_harga) }} <br>
+                                        Pembayaran : {{ $item->pembayaran }} <br><br>
+
+                                        <label class="mb-1">Ubah Metode Pembayaran:</label>
+
+                                        <select name="pembayaran" class="form-control" required>
+                                            <option value="{{ $item->pembayaran }}" selected>
+                                                {{ $item->pembayaran }}
+                                            </option>
+
+                                            @if ($item->pembayaran == 'Tunai')
+                                                <option value="Transfer">Transfer</option>
+                                                <option value="Kredit">Kredit</option>
+                                            @elseif($item->pembayaran == 'Transfer')
+                                                <option value="Tunai">Tunai</option>
+                                                <option value="Kredit">Kredit</option>
+                                            @else
+                                                <option value="Tunai">Tunai</option>
+                                                <option value="Transfer">Transfer</option>
+                                            @endif
+                                        </select>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-success">
+                                            Ya, Lunas
+                                        </button>
+
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            Batal
+                                        </button>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
 
             {{-- PAGINATION --}}

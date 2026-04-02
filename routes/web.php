@@ -171,6 +171,7 @@ Route::middleware(['auth', 'role:owner,admin_toko'])
 
         Route::get('/', [EggGrowController::class, 'dashboard'])->name('dashboard');
         Route::get('/profit-by-date', [EggGrowController::class, 'profitByDate']);
+        Route::get('/harga-by-date', [EggGrowController::class, 'hargaByDate']);
 
         // ======================
         // BARANG MASUK
