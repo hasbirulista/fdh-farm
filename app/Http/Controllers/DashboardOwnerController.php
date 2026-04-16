@@ -152,8 +152,35 @@ class DashboardOwnerController extends Controller
 
         /* ========================== DASHBOARD TOKO ========================== */
 
-        $saldoToko = Saldo::where('jenis_saldo', 'toko')->value('jumlah_saldo') ?? 0;
+        $saldoTokoCash = Saldo::where('jenis_saldo', 'toko')->value('jumlah_saldo') ?? 0;
 
+        // 🔹 Saldo Kredit Toko (Piutang pelanggan dengan pembayaran Kredit)
+        $saldoTokoCreditValue = Transaksi::where('pembayaran', 'Kredit')
+            ->sum('total_harga') ?? 0;
+
+        // 🔹 Stok Telur Toko
+        $stokTelurOmegaToko = (StokTelur::where('jenis_stok', 'toko')
+            ->where('jenis_telur', 'Omega')
+            ->value('total_stok') ?? 0) / 1000;
+
+        $stokTelurBiasaToko = (StokTelur::where('jenis_stok', 'toko')
+            ->where('jenis_telur', 'Biasa')
+            ->value('total_stok') ?? 0) / 1000;
+
+        // 🔹 Harga Rata-rata Telur Toko Hari Ini
+        $hargaTelurOmegaToko = Transaksi::whereDate('tanggal_transaksi', $hariIni)
+            ->where('jenis_telur', 'Omega')
+            ->avg('harga_jual_kilo') ?? 0;
+
+        $hargaTelurBiasaToko = Transaksi::whereDate('tanggal_transaksi', $hariIni)
+            ->where('jenis_telur', 'Biasa')
+            ->avg('harga_jual_kilo') ?? 0;
+
+        // 🔹 Total Saldo Toko = Cash + Credit + Nilai Stok
+        $saldoTelurOmega = $stokTelurOmegaToko * $hargaTelurOmegaToko;
+        $saldoTelurBiasa = $stokTelurBiasaToko * $hargaTelurBiasaToko;
+        $saldoToko = $saldoTokoCash + $saldoTokoCreditValue + $saldoTelurOmega + $saldoTelurBiasa;
+        
         // 🔹 Penjualan bulan terpilih (FIXED)
         $penjualanTokoBulanIni = Transaksi::whereMonth('tanggal_transaksi', $bulan)
             ->whereYear('tanggal_transaksi', $tahun)
@@ -192,8 +219,24 @@ class DashboardOwnerController extends Controller
         $pengeluaranTokoBulanIni = PengeluaranToko::whereMonth('tanggal', $bulan)
             ->whereYear('tanggal', $tahun)
             ->sum('nominal');
+        
+        // 🔹 Profit dari transaksi TUNAI/TRANSFER (dihitung pada tanggal_transaksi)
+        $profitTanggalTransaksi = Transaksi::whereMonth('tanggal_transaksi', $bulan)
+            ->whereYear('tanggal_transaksi', $tahun)
+            ->whereIn('pembayaran', ['Tunai', 'Transfer'])
+            ->whereNull('tanggal_pelunasan')  // Exclude kredit yang sudah dilunaskan
+            ->selectRaw('SUM(total_harga - (harga_beli_kilo * total_berat / 1000)) as profit')
+            ->value('profit') ?? 0;
 
-        $labaToko = $penjualanTokoBulanIni - $pengeluaranTokoBulanIni;
+        // 🔹 Profit dari transaksi KREDIT yang SUDAH LUNAS (dihitung pada tanggal_pelunasan)
+        $profitTanggalPelunasan = Transaksi::whereMonth('tanggal_pelunasan', $bulan)
+            ->whereYear('tanggal_pelunasan', $tahun)
+            ->where('status_pelunasan', 'lunas')
+            ->selectRaw('SUM(total_harga - (harga_beli_kilo * total_berat / 1000)) as profit')
+            ->value('profit') ?? 0;
+
+        $profitBulanIni = $profitTanggalTransaksi + $profitTanggalPelunasan;
+        $labaToko = $profitBulanIni;
 
         /* ========================== RETURN VIEW ========================== */
 
@@ -230,6 +273,14 @@ class DashboardOwnerController extends Controller
 
             // TOKO
             'saldoToko',
+            'saldoTokoCash',
+            'saldoTokoCreditValue',
+            'stokTelurOmegaToko',
+            'stokTelurBiasaToko',
+            'hargaTelurOmegaToko',
+            'hargaTelurBiasaToko',
+            'saldoTelurOmega',
+            'saldoTelurBiasa',
             'penjualanTokoBulanIni',
             'pengeluaranTokoBulanIni',
             'labaToko',

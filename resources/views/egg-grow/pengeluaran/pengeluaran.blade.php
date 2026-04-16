@@ -75,15 +75,24 @@
                     ➕ Tambah Pengeluaran
                 </a>
 
-                {{-- CETAK LAPORAN --}}
-                @if ($bulan && $bulan !== 'all')
+                {{-- CETAK LAPORAN HARIAN --}}
+                @if ($tanggal)
+                    <a href="{{ route('egg-grow.cetakPengeluaran', [
+                        'tanggal' => $tanggal,
+                        '_t' => time(),
+                    ]) }}"
+                        target="_blank" class="btn-custom print">
+                        🖨️ Cetak Harian
+                    </a>
+                {{-- CETAK LAPORAN BULANAN --}}
+                @elseif ($bulan && $bulan !== 'all')
                     <a href="{{ route('egg-grow.cetakPengeluaran', [
                         'bulan' => request('bulan'),
                         'tahun' => request('tahun'),
                         '_t' => time(),
                     ]) }}"
-                        target="_blank" class="btn btn-info">
-                        🖨️ Cetak Pengeluaran
+                        target="_blank" class="btn-custom print">
+                        🖨️ Cetak Bulanan
                     </a>
                 @endif
             </div>
@@ -103,6 +112,13 @@
         <div class="card shadow-sm mb-3">
             <div class="card-body">
                 <form method="GET" class="row g-3 align-items-end">
+
+                    {{-- TANGGAL --}}
+                    <div class="col-12 col-md-3">
+                        <label class="fw-semibold small">Tanggal</label>
+                        <input type="date" name="tanggal" class="form-control form-control-sm" 
+                            value="{{ request('tanggal') }}" onchange="this.form.submit()">
+                    </div>
 
                     {{-- BULAN --}}
                     <div class="col-6 col-md-3">

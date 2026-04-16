@@ -88,11 +88,17 @@
                     🏆 Ranking
                 </a>
 
-                {{-- CETAK LAPORAN --}}
-                @if ($bulan !== 'all')
+                {{-- CETAK LAPORAN HARIAN --}}
+                @if (request('tanggal'))
+                    <a href="{{ route('transaksi.cetak', ['tanggal' => request('tanggal'), '_t' => time()]) }}"
+                        target="_blank" class="btn-custom print">
+                        🖨️ Cetak Harian
+                    </a>
+                {{-- CETAK LAPORAN BULANAN --}}
+                @elseif ($bulan !== 'all')
                     <a href="{{ route('transaksi.cetak', ['bulan' => $bulan, 'tahun' => $tahun, '_t' => time()]) }}"
                         target="_blank" class="btn-custom print">
-                        🖨️ Cetak
+                        🖨️ Cetak Bulanan
                     </a>
                 @endif
             </div>
@@ -111,8 +117,13 @@
         {{-- FILTER --}}
         <div class="card shadow-sm mb-3">
             <div class="card-body">
-                <form method="GET" class="row g-3 align-items-end">
 
+                <form method="GET" class="row g-3 align-items-end">
+                    <div class="col-6 col-md-3">
+                        <label class="fw-semibold small">Tanggal (filter harian)</label>
+                        <input type="date" name="tanggal" class="form-control form-control-sm"
+                            value="{{ request('tanggal') }}" onchange="this.form.submit()">
+                    </div>
                     {{-- BULAN --}}
                     <div class="col-6 col-md-3">
                         <label class="fw-semibold small">Bulan</label>
@@ -141,6 +152,47 @@
                 </form>
             </div>
         </div>
+        @if (request('tanggal'))
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 text-muted">Ringkasan Harian - {{ \Carbon\Carbon::parse(request('tanggal'))->translatedFormat('d F Y') }}</h6>
+                </div>
+                <div class="card-body d-flex justify-content-between">
+                    <div>
+                        <small>Total Omzet</small>
+                        <h6>Rp {{ number_format($totalOmzetHarian, 0, ',', '.') }}</h6>
+                    </div>
+                    <div>
+                        <small>Total Profit</small>
+                        <h6>Rp {{ number_format($totalProfitHarian, 0, ',', '.') }}</h6>
+                    </div>
+                    <div>
+                        <small>Pelunasan Hari Ini</small>
+                        <h6>Rp {{ number_format($pelunasanHariIni, 0, ',', '.') }}</h6>
+                    </div>
+                </div>
+            </div>
+        @elseif ($bulan !== 'all' && is_numeric($bulan))
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 text-muted">Ringkasan Bulanan - {{ \Carbon\Carbon::create()->month((int)$bulan)->translatedFormat('F') }} {{ $tahun }}</h6>
+                </div>
+                <div class="card-body d-flex justify-content-between">
+                    <div>
+                        <small>Total Omzet</small>
+                        <h6>Rp {{ number_format($totalOmzetBulan, 0, ',', '.') }}</h6>
+                    </div>
+                    <div>
+                        <small>Total Profit</small>
+                        <h6>Rp {{ number_format($totalProfitBulan, 0, ',', '.') }}</h6>
+                    </div>
+                    <div>
+                        <small>Total Pelunasan</small>
+                        <h6>Rp {{ number_format($pelunasanBulan, 0, ',', '.') }}</h6>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- TABLE --}}
         <div class="card shadow-sm">
@@ -176,7 +228,14 @@
                                 <td>Rp {{ number_format($transaksi->harga_beli_kilo, 0, ',', '.') }}</td>
                                 <td>Rp {{ number_format($transaksi->harga_jual_kilo, 0, ',', '.') }}</td>
                                 <td>Rp {{ number_format($transaksi->total_harga, 0, ',', '.') }}</td>
-                                <td>{{ $transaksi->pembayaran }}</td>
+                                <td>{{ $transaksi->pembayaran }}
+                                    @if ($transaksi->status_pelunasan == 'lunas')
+                                        <small class="text-success">
+                                            - ✔ Pelunasan
+                                            ({{ \Carbon\Carbon::parse($transaksi->tanggal_pelunasan)->format('d/m/Y') }})
+                                        </small>
+                                    @endif
+                                </td>
                                 <td>
                                     Rp
                                     {{ number_format($transaksi->total_harga - $transaksi->harga_beli_kilo * ($transaksi->total_berat / 1000), 0, ',', '.') }}

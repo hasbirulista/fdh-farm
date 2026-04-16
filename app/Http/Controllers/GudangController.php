@@ -18,6 +18,7 @@ use App\Models\PengeluaranToko;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class GudangController extends Controller
 {
@@ -462,70 +463,106 @@ class GudangController extends Controller
     */
     public function barangKeluar(Request $request)
     {
+        $tanggal = $request->get('tanggal'); // Untuk filter harian
         $query = GudangBarangKeluar::query();
 
-        // Tahun: default sekarang jika tidak diisi
-        $tahun = $request->filled('tahun') ? $request->tahun : now()->year;
+        // FILTER HARIAN
+        if ($tanggal) {
+            $query->whereDate('tanggal_barang_keluar', $tanggal);
+            $data_barang_keluar = $query->orderBy('tanggal_barang_keluar', 'desc')
+                ->paginate(10)
+                ->withQueryString();
+        } 
+        // FILTER BULANAN
+        else {
+            // Tahun: default sekarang jika tidak diisi
+            $tahun = $request->filled('tahun') ? $request->tahun : now()->year;
 
-        // Bulan:
-        // - Jika request 'bulan' = 'all' → null (tidak filter)
-        // - Jika tidak diisi → default bulan sekarang
-        if ($request->filled('bulan')) {
-            $bulan = $request->bulan === 'all' ? null : $request->bulan;
-        } else {
-            $bulan = now()->month;
+            // Bulan:
+            // - Jika request 'bulan' = 'all' → null (tidak filter)
+            // - Jika tidak diisi → default bulan sekarang
+            if ($request->filled('bulan')) {
+                $bulan = $request->bulan === 'all' ? null : $request->bulan;
+            } else {
+                $bulan = now()->month;
+            }
+
+            // Filter tahun wajib
+            $query->whereYear('tanggal_barang_keluar', $tahun);
+
+            // Filter bulan jika ada
+            if ($bulan) {
+                $query->whereMonth('tanggal_barang_keluar', $bulan);
+            }
+
+            // Ambil data dengan paginate
+            $data_barang_keluar = $query->orderBy('tanggal_barang_keluar', 'desc')
+                ->paginate(10)
+                ->withQueryString();
         }
-
-        // Filter tahun wajib
-        $query->whereYear('tanggal_barang_keluar', $tahun);
-
-        // Filter bulan jika ada
-        if ($bulan) {
-            $query->whereMonth('tanggal_barang_keluar', $bulan);
-        }
-
-        // Ambil data dengan paginate
-        $data_barang_keluar = $query->orderBy('tanggal_barang_keluar', 'desc')
-            ->paginate(10)
-            ->withQueryString();
 
         // Periode untuk ditampilkan
-        $periode = $bulan
-            ? \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y')
-            : "Tahun $tahun";
+        if ($tanggal) {
+            $periode = \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y');
+        } else {
+            $bulan = $request->filled('bulan') ? ($request->bulan === 'all' ? null : $request->bulan) : now()->month;
+            $tahun = $request->filled('tahun') ? $request->tahun : now()->year;
+            $periode = $bulan
+                ? \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y')
+                : "Tahun $tahun";
+        }
 
         return view('gudang.barangKeluar.gudangBarangKeluar', [
             'page' => 'Gudang',
             'data_barang_keluar' => $data_barang_keluar,
             'periode' => $periode,
-            'bulan' => $request->filled('bulan') ? $request->bulan : $bulan, // untuk select bulan di blade
-            'tahun' => $tahun,
+            'tanggal' => $tanggal,
+            'bulan' => $request->filled('bulan') ? $request->bulan : (isset($bulan) ? $bulan : now()->month),
+            'tahun' => isset($tahun) ? $tahun : now()->year,
         ]);
     }
 
 
     public function cetakBarangKeluar(Request $request)
     {
-        $bulan = $request->filled('bulan') ? $request->bulan : null;
-        $tahun = $request->filled('tahun') ? $request->tahun : now()->year;
+        $tanggal = $request->get('tanggal'); // Untuk cetak harian
+        $bulan = $request->get('bulan');
+        $tahun = $request->get('tahun', now()->year);
 
-        $query = GudangBarangKeluar::query();
-        $query->whereYear('tanggal_barang_keluar', $tahun);
-
-        if ($bulan) {
-            $query->whereMonth('tanggal_barang_keluar', $bulan);
+        // ===== CETAK HARIAN =====
+        if ($tanggal) {
+            $data_barang_keluar = GudangBarangKeluar::query()
+                ->whereDate('tanggal_barang_keluar', $tanggal)
+                ->orderBy('tanggal_barang_keluar', 'asc')
+                ->get();
+            
+            $periode = \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y');
+            $isHarian = true;
         }
+        // ===== CETAK BULANAN =====
+        else {
+            $query = GudangBarangKeluar::query();
+            $query->whereYear('tanggal_barang_keluar', $tahun);
 
-        $data_barang_keluar = $query->orderBy('tanggal_barang_keluar', 'asc')->get();
+            if ($bulan && $bulan !== 'all') {
+                $query->whereMonth('tanggal_barang_keluar', $bulan);
+            }
 
-        $periode = $bulan
-            ? \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y')
-            : "Tahun $tahun";
+            $data_barang_keluar = $query->orderBy('tanggal_barang_keluar', 'asc')->get();
+
+            $periode = $bulan && $bulan !== 'all'
+                ? \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y')
+                : "Tahun $tahun";
+            
+            $isHarian = false;
+        }
 
         // Load PDF
         $pdf = Pdf::loadView('gudang.barangKeluar.barangKeluarLaporan', [
             'data_barang_keluar' => $data_barang_keluar,
-            'periode' => $periode
+            'periode' => $periode,
+            'tanggal' => $tanggal,
+            'isHarian' => $isHarian,
         ])->setPaper('A4', 'portrait');
 
         // Nama file unik agar browser HP tidak cache PDF lama
@@ -1010,64 +1047,84 @@ class GudangController extends Controller
         }
     }
 
-    public function pengeluaran()
+    public function pengeluaran(Request $request)
     {
-        // Jika request ADA → pakai request
-        // Jika TIDAK ADA → default bulan sekarang
-        $bulan = request()->has('bulan')
-            ? request('bulan')
-            : now()->month;
-
-        $tahun = request()->filled('tahun')
-            ? request('tahun')
-            : now()->year;
+        $tanggal = $request->get('tanggal');
+        $bulan = $request->has('bulan') ? $request->bulan : now()->month;
+        $tahun = $request->has('tahun') ? $request->tahun : now()->year;
 
         $query = Pengeluaran::query();
-        $query->whereYear('tanggal', $tahun);
 
-        // 🔑 HANYA filter bulan jika:
-        // - bulan bukan null
-        // - dan bukan 'all'
-        if ($bulan && $bulan !== 'all') {
-            $query->whereMonth('tanggal', $bulan);
+        // 🔥 FILTER UTAMA
+        if ($tanggal) {
+            $query->whereDate('tanggal', $tanggal);
+        } else {
+            $query->whereYear('tanggal', $tahun);
+
+            if ($bulan && $bulan !== 'all') {
+                $query->whereMonth('tanggal', $bulan);
+            }
         }
 
         $data_pengeluaran = $query
             ->orderBy('tanggal', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->appends(request()->query());
 
         return view('gudang.pengeluaran.pengeluaran', [
             'page' => 'Gudang',
             'data_pengeluaran' => $data_pengeluaran,
             'bulan' => $bulan,
             'tahun' => $tahun,
+            'tanggal' => $tanggal,
         ]);
     }
 
 
 
-    public function cetakPengeluaran()
+    public function cetakPengeluaran(Request $request)
     {
-        $bulan = request()->filled('bulan') ? request('bulan') : null;
-        $tahun = request()->filled('tahun') ? request('tahun') : now()->year;
+        $tanggal = $request->get('tanggal');
+        $bulan = $request->get('bulan');
+        $tahun = $request->get('tahun', now()->year);
 
-        $query = Pengeluaran::query();
-        $query->whereYear('tanggal', $tahun);
+        // ===== CETAK HARIAN =====
+        if ($tanggal) {
+            $data_pengeluaran = Pengeluaran::whereDate('tanggal', $tanggal)
+                ->orderBy('tanggal', 'asc')
+                ->get();
 
-        if ($bulan) {
-            $query->whereMonth('tanggal', $bulan);
+            $periode = Carbon::parse($tanggal)->translatedFormat('d F Y');
+            $isHarian = true;
         }
+        // ===== CETAK BULANAN =====
+        else {
+            $query = Pengeluaran::query();
+            $query->whereYear('tanggal', $tahun);
 
-        $data_pengeluaran = $query->orderBy('tanggal', 'asc')->get(); // ambil semua data
+            if ($bulan && $bulan !== 'all') {
+                $query->whereMonth('tanggal', $bulan);
+            }
 
-        $periode = $bulan
-            ? \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y')
-            : "Tahun $tahun";
+            $data_pengeluaran = $query->orderBy('tanggal', 'asc')->get();
+
+            // Tentukan periode
+            if ($bulan && $bulan !== 'all') {
+                $periode = Carbon::createFromDate($tahun, $bulan, 1)
+                    ->translatedFormat('F Y');
+            } else {
+                $periode = "Tahun $tahun";
+            }
+
+            $isHarian = false;
+        }
 
         // Load PDF
         $pdf = Pdf::loadView('gudang.pengeluaran.pengeluaranLaporan', [
             'data_pengeluaran' => $data_pengeluaran,
-            'periode' => $periode
+            'periode' => $periode,
+            'tanggal' => $tanggal,
+            'isHarian' => $isHarian
         ])->setPaper('A4', 'landscape');
 
         // Nama file unik agar browser HP tidak cache PDF lama

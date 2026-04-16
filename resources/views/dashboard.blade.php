@@ -51,42 +51,34 @@
         </div>
 
         {{-- ================= HIGHLIGHT SALDO ================= --}}
+        {{-- ================= SALDO (SEJAJAR) ================= --}}
         <div class="row g-3 mb-4">
-            {{-- SALDO GUDANG --}}
+
             <div class="col-md-6 col-12">
                 <div class="card shadow-sm border-0 bg-success bg-gradient text-white h-100">
-                    <button class="btn text-white text-start p-0" data-bs-toggle="modal" data-bs-target="#modalSaldoGudang">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <small class="opacity-75">Saldo FDH FARM</small>
-                                <h3 class="fw-bold mb-0">
-                                    Rp {{ number_format($saldoGudang) }}
-                                </h3>
-                            </div>
-
+                    <button class="btn text-white text-start w-100 p-0" data-bs-toggle="modal"
+                        data-bs-target="#modalSaldoGudang">
+                        <div class="card-body">
+                            <small>Saldo FDH FARM</small>
+                            <h3>Rp {{ number_format($saldoGudang) }}</h3>
                         </div>
                     </button>
                 </div>
             </div>
 
-            {{-- SALDO TOKO --}}
             <div class="col-md-6 col-12">
                 <div class="card shadow-sm border-0 bg-primary bg-gradient text-white h-100">
-                    <button class="btn text-white text-start p-0" data-bs-toggle="modal" data-bs-target="#modalSaldoToko">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <small class="opacity-75">Saldo Egg Grow</small>
-                                <h3 class="fw-bold mb-0">
-                                    Rp {{ number_format($saldoToko) }}
-                                </h3>
-                            </div>
-
+                    <button class="btn text-white text-start w-100 p-0" data-bs-toggle="modal"
+                        data-bs-target="#modalSaldoToko">
+                        <div class="card-body">
+                            <small>Saldo Egg Grow</small>
+                            <h3>Rp {{ number_format($saldoToko) }}</h3>
                         </div>
                     </button>
                 </div>
             </div>
-        </div>
 
+        </div>
         {{-- FILTER --}}
         <form method="GET" action="{{ route('dashboard') }}" class="row g-2 mb-4">
             <div class="col-auto">
@@ -170,7 +162,7 @@
                 <div class="card shadow-sm text-center">
                     <div class="card-body">
                         <small class="text-muted">Berat Telur Hari Ini</small>
-                        <h3 class="fw-bold">{{ number_format($telurHariIni->total_gram/1000 ?? 0) }} Kg</h3>
+                        <h3 class="fw-bold">{{ number_format($telurHariIni->total_gram / 1000 ?? 0) }} Kg</h3>
                     </div>
                 </div>
             </div>
@@ -248,7 +240,6 @@
         </div>
 
         {{-- ================= TOKO ================= --}}
-        {{-- HEADER Toko --}}
         <div class="mb-4 border-bottom pb-2">
             <h5 class="fw-bold mb-0">EGG GROW</h5>
             <small class="text-muted">{{ \Carbon\Carbon::createFromDate($tahun, (int) $bulan, 1)->translatedFormat('F') }}
@@ -273,15 +264,25 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-6">
+            <div class="col-md-3 col-6">
                 <div class="card shadow-sm text-center">
                     <div class="card-body">
-                        <small class="text-muted">Laba</small>
+                        <small class="text-muted">Profit</small>
                         <h5 class="fw-bold text-primary">
                             Rp {{ number_format($labaToko) }}
                         </h5>
                     </div>
-                </div>
+                </div>                
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card shadow-sm text-center">
+                    <div class="card-body">
+                        <small class="text-muted">Saldo</small>
+                        <h5 class="fw-bold text-primary">
+                            Rp {{ number_format($saldoTokoCash) }}
+                        </h5>
+                    </div>
+                </div>                
             </div>
         </div>
 
@@ -355,7 +356,7 @@
                 </div>
 
                 <div class="modal-body">
-                    <input type="number" name="saldo" class="form-control mb-3" value="{{ $saldoToko }}"
+                    <input type="number" name="saldo" class="form-control mb-3" value="{{ $saldoTokoCash }}"
                         min="0" required>
 
                     <div class="form-check">

@@ -79,6 +79,19 @@
             </div>
         </div>
 
+        {{-- SEARCH FORM --}}
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <form method="GET" class="row g-3 align-items-end" id="filterForm">
+                    <div class="col-md-4 col-12">
+                        <label class="fw-semibold small">Cari Pelanggan</label>
+                        <input type="text" id="searchInput" name="q" class="form-control form-control-sm"
+                            placeholder="Nama pelanggan" value="{{ request('q') }}" oninput="autoSubmit()">
+                    </div>
+                </form>
+            </div>
+        </div>
+
         {{-- TABLE --}}
         <div class="card shadow-sm">
             <div class="table-responsive">
@@ -104,7 +117,7 @@
                                 </td>
 
                                 <td class="text-center">
-                                    {{ $item->tanggal_transaksi }}
+                                    {{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d/m/Y') }}
                                 </td>
 
                                 <td>
@@ -207,8 +220,12 @@
             <div
                 class="card-footer bg-white d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
                 <div class="small text-muted">
-                    Menampilkan {{ $data->firstItem() ?? 0 }} – {{ $data->lastItem() ?? 0 }} dari
-                    {{ $data->total() ?? 0 }} data
+                    @if(request('q'))
+                        Hasil pencarian: <strong>{{ $data->total() }}</strong> data
+                    @else
+                        Menampilkan {{ $data->firstItem() ?? 0 }} – {{ $data->lastItem() ?? 0 }} dari
+                        {{ $data->total() ?? 0 }} data
+                    @endif
                 </div>
 
                 <div>
@@ -217,4 +234,15 @@
             </div>
         </div>
     </div>
+
+    <script>
+        let typingTimer;
+
+        function autoSubmit() {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                document.getElementById('filterForm').submit();
+            }, 500);
+        }
+    </script>
 @endsection

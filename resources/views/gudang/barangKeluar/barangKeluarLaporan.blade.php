@@ -5,9 +5,20 @@
     <meta charset="utf-8">
     <title>Laporan Barang Keluar — {{ $periode }}</title>
     <style>
-        <style><style>body {
+        body {
             font-family: sans-serif;
             font-size: 12px;
+        }
+
+        h2 {
+            margin: 0;
+            padding: 0;
+        }
+
+        h3 {
+            margin: 20px 0 10px 0;
+            padding: 0;
+            font-size: 14px;
         }
 
         table {
@@ -26,90 +37,117 @@
         th {
             background-color: #eee;
         }
+
+        td.text-right {
+            text-align: right;
+        }
+
+        tfoot td {
+            font-weight: bold;
+            background-color: #f5f5f5;
+        }
+
+        .section {
+            page-break-inside: avoid;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 
 <body>
-    <h3 style="text-align:center; margin-bottom:5px;">Laporan Barang Keluar FDH FARM</h3>
+    <h2 style="text-align:center; margin-bottom:5px;">LAPORAN BARANG KELUAR FDH FARM</h2>
     <p style="text-align:center; margin-bottom:20px;">
-        <strong>Periode: </strong> — {{ $periode }}
+        <strong>Periode: </strong>{{ $periode }}
     </p>
 
-    <table>
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Tanggal</th>
-                <th>Nama Konsumen</th>
-                <th>Jenis Barang</th>
-                <th>Detail Barang</th>
-                <th>Harga</th>
-                <th>Total Harga</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $totalBeratTelur = 0;
-                $totalHargaTelur = 0;
-            @endphp
-
-            @foreach ($data_barang_keluar as $index => $item)
-                @if ($item->jenis_barang === 'telur')
-                    @php
-                        $totalBeratTelur += $item->jumlah_barang_keluar / 1000;
-                        $totalHargaTelur += $item->total_harga;
-                    @endphp
-                @endif
-
+    <div class="section">
+        <table>
+            <thead>
                 <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($item->tanggal_barang_keluar)->format('d/m/Y') }}</td>
-                    <td>{{ $item->nama_konsumen }}</td>
-                    <td>
-                        {{ $item->jenis_barang === 'telur' ? 'Telur' : 'Ayam Apkir' }}
-                    </td>
-                    <td>
-                        @if ($item->jenis_barang === 'telur')
-                            {{ $item->jenis_telur }} -
-                            {{ number_format($item->jumlah_barang_keluar / 1000, 2, ',', '.') }} Kg
-                        @else
-                            {{ number_format($item->jumlah_ayam, 0, ',', '.') }} ekor
-                        @endif
-                    </td>
-                    <td style="text-align:right;">
-                        @if ($item->jenis_barang === 'telur')
-                            Rp {{ number_format($item->harga_kilo, 0, ',', '.') }}/Kg
-                        @else
-                            Rp {{ number_format($item->total_harga / $item->jumlah_ayam, 0, ',', '.') }}/Ekor
-                        @endif
-                    </td>
-                    <td style="text-align:right;">
-                        Rp {{ number_format($item->total_harga, 0, ',', '.') }}
-                    </td>
+                    <th>No</th>
+                    <th>Tanggal</th>
+                    <th>Nama Konsumen</th>
+                    <th>Jenis Barang</th>
+                    <th>Detail Barang</th>
+                    <th>Harga</th>
+                    <th>Total Harga</th>
                 </tr>
-            @endforeach
-        </tbody>
+            </thead>
+            <tbody>
+                @php
+                    $totalBeratTelur = 0;
+                    $totalHargaTelur = 0;
+                    $totalAyam = 0;
+                    $totalHargaAyam = 0;
+                @endphp
 
-        @php
-            $rataHargaKg = $totalBeratTelur > 0 ? $totalHargaTelur / $totalBeratTelur : 0;
-        @endphp
+                @foreach ($data_barang_keluar as $index => $item)
+                    @if ($item->jenis_barang === 'telur')
+                        @php
+                            $totalBeratTelur += $item->jumlah_barang_keluar / 1000;
+                            $totalHargaTelur += $item->total_harga;
+                        @endphp
+                    @elseif($item->jenis_barang === 'ayam_apkir')
+                        @php
+                            $totalAyam += $item->jumlah_ayam;
+                            $totalHargaAyam += $item->total_harga;
+                        @endphp
+                    @endif
 
-        <tfoot>
-            <tr>
-                <td style="text-align: right" colspan="5"><strong>Jumlah Total Berat Telur</strong></td>
-                <td  colspan="2"><strong>{{ number_format($totalBeratTelur, 2, ',', '.') }} Kg</strong></td>
-            </tr>
-            <tr>
-                <td style="text-align: right" colspan="5"><strong>Jumlah Total Harga</strong></td>
-                <td colspan="2"><strong>Rp {{ number_format($totalHargaTelur, 0, ',', '.') }}</strong></td>
-            </tr>
-            <tr>
-                <td style="text-align: right" colspan="5"><strong>Jumlah Rata-rata Harga Telur / Kg</strong></td>
-                <td colspan="2"><strong>Rp {{ number_format($rataHargaKg, 0, ',', '.') }}/Kg</strong></td>
-            </tr>
-        </tfoot>
-    </table>
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ \Carbon\Carbon::parse($item->tanggal_barang_keluar)->format('d/m/Y') }}</td>
+                        <td>{{ $item->nama_konsumen }}</td>
+                        <td>
+                            {{ $item->jenis_barang === 'telur' ? 'Telur' : 'Ayam Apkir' }}
+                        </td>
+                        <td>
+                            @if ($item->jenis_barang === 'telur')
+                                {{ $item->jenis_telur }} -
+                                {{ number_format($item->jumlah_barang_keluar / 1000, 2, ',', '.') }} Kg
+                            @else
+                                {{ number_format($item->jumlah_ayam, 0, ',', '.') }} ekor
+                            @endif
+                        </td>
+                        <td class="text-right">
+                            @if ($item->jenis_barang === 'telur')
+                                Rp {{ number_format($item->harga_kilo, 0, ',', '.') }}/Kg
+                            @else
+                                Rp {{ number_format($item->total_harga / $item->jumlah_ayam, 0, ',', '.') }}/Ekor
+                            @endif
+                        </td>
+                        <td class="text-right">
+                            Rp {{ number_format($item->total_harga, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
 
+            <tfoot>
+                @php
+                    $rataHargaKg = $totalBeratTelur > 0 ? $totalHargaTelur / $totalBeratTelur : 0;
+                @endphp
+                <tr>
+                    <td style="text-align: right" colspan="5"><strong>Jumlah Total Berat Telur</strong></td>
+                    <td colspan="2"><strong>{{ number_format($totalBeratTelur, 2, ',', '.') }} Kg</strong></td>
+                </tr>
+                <tr>
+                    <td style="text-align: right" colspan="5"><strong>Jumlah Total Ayam</strong></td>
+                    <td colspan="2"><strong>{{ number_format($totalAyam, 0, ',', '.') }} ekor</strong></td>
+                </tr>
+                <tr>
+                    <td style="text-align: right" colspan="5"><strong>Jumlah Total Harga</strong></td>
+                    <td colspan="2"><strong>Rp {{ number_format($totalHargaTelur + $totalHargaAyam, 0, ',', '.') }}</strong></td>
+                </tr>
+                @if ($totalBeratTelur > 0)
+                    <tr>
+                        <td style="text-align: right" colspan="5"><strong>Jumlah Rata-rata Harga Telur / Kg</strong></td>
+                        <td colspan="2"><strong>Rp {{ number_format($rataHargaKg, 0, ',', '.') }}/Kg</strong></td>
+                    </tr>
+                @endif
+            </tfoot>
+        </table>
+    </div>
 
 </body>
 

@@ -98,15 +98,21 @@
                 </a>
                 <a href="/dashboard/gudang/barang-keluar/tambah" class="btn-custom primary">+ Tambah Barang Keluar</a>
 
-                {{-- CETAK LAPORAN --}}
-                @if ($bulan !== 'all')
+                {{-- CETAK LAPORAN HARIAN --}}
+                @if (request('tanggal'))
+                    <a href="{{ route('barangKeluar.cetak', ['tanggal' => request('tanggal'), '_t' => time()]) }}"
+                        target="_blank" class="btn-custom print">
+                        🖨️ Cetak Harian
+                    </a>
+                {{-- CETAK LAPORAN BULANAN --}}
+                @elseif ($bulan !== 'all')
                     <a href="{{ route('barangKeluar.cetak', [
                         'bulan' => request('bulan'),
                         'tahun' => request('tahun'),
                         '_t' => time(),
                     ]) }}"
                         target="_blank" class="btn-custom print">
-                        🖨️ Cetak Barang Keluar
+                        🖨️ Cetak Bulanan
                     </a>
                 @endif
             </div>
@@ -128,6 +134,13 @@
                 style="font-weight: 700; font-size: 1rem; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">
                 Filter</div>
             <form method="GET" class="row g-3 align-items-end">
+                {{-- Tanggal (filter harian) --}}
+                <div class="col-md-3 col-6">
+                    <label class="fw-semibold small">Tanggal (filter harian)</label>
+                    <input type="date" name="tanggal" class="form-control form-control-sm"
+                        value="{{ request('tanggal') }}" onchange="this.form.submit()">
+                </div>
+
                 {{-- Bulan --}}
                 <div class="col-md-3 col-6">
                     <label class="fw-semibold small">Bulan</label>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <title>Laporan Pengeluaran - {{ $periode }}</title>
     <style>
-        <style>body {
+        body {
             font-family: Helvetica, Arial, sans-serif;
             font-size: 12px;
         }
@@ -86,7 +86,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7">Data pengeluaran tidak tersedia</td>
+                    <td colspan="6">Data pengeluaran tidak tersedia</td>
                 </tr>
             @endforelse
         </tbody>

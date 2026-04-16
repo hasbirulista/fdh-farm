@@ -141,12 +141,23 @@ class EggGrowController extends Controller
             return response()->json(['profit' => '0']);
         }
 
-        $profit = Transaksi::whereDate('tanggal_transaksi', $tanggal)
+        // Profit dari transaksi TUNAI/TRANSFER (dihitung pada tanggal_transaksi)
+        $profitTanggalTransaksi = Transaksi::whereDate('tanggal_transaksi', $tanggal)
+            ->whereIn('pembayaran', ['Tunai', 'Transfer'])
+            ->whereNull('tanggal_pelunasan')  // Exclude kredit yang sudah dilunaskan
             ->selectRaw('SUM(total_harga - (harga_beli_kilo * total_berat / 1000)) as profit')
-            ->value('profit');
+            ->value('profit') ?? 0;
+
+        // Profit dari transaksi KREDIT yang SUDAH LUNAS (dihitung pada tanggal_pelunasan)
+        $profitTanggalPelunasan = Transaksi::whereDate('tanggal_pelunasan', $tanggal)
+            ->where('status_pelunasan', 'lunas')
+            ->selectRaw('SUM(total_harga - (harga_beli_kilo * total_berat / 1000)) as profit')
+            ->value('profit') ?? 0;
+
+        $profit = $profitTanggalTransaksi + $profitTanggalPelunasan;
 
         return response()->json([
-            'profit' => number_format($profit ?? 0, 0, ',', '.')
+            'profit' => number_format($profit, 0, ',', '.')
         ]);
     }
 
@@ -359,23 +370,114 @@ class EggGrowController extends Controller
     */
     public function transaksi()
     {
-        // Kalau tidak ada di URL → pakai bulan & tahun saat ini
+        $tanggal = request()->get('tanggal');
+
         $bulan = request()->has('bulan')
-            ? request('bulan')
+            ? (int) request('bulan')
             : now()->month;
 
         $tahun = request()->has('tahun')
-            ? request('tahun')
+            ? (int) request('tahun')
             : now()->year;
 
         $query = Transaksi::with('pelanggan');
 
-        // Filter tahun (wajib)
-        $query->whereYear('tanggal_transaksi', $tahun);
+        // 🔥 FILTER UTAMA
+        if ($tanggal) {
+            $query->where(function ($q) use ($tanggal) {
+                $q->whereDate('tanggal_transaksi', $tanggal)
+                    ->orWhereDate('tanggal_pelunasan', $tanggal);
+            });
+        } else {
+            $query->whereYear('tanggal_transaksi', $tahun);
 
-        // Filter bulan (default = bulan sekarang)
-        if ($bulan !== 'all') {
-            $query->whereMonth('tanggal_transaksi', $bulan);
+            if ($bulan !== 'all') {
+                $query->whereMonth('tanggal_transaksi', $bulan);
+            }
+        }
+
+        // 🔥 AMBIL DATA UNTUK TOTAL
+        
+        // ===== FILTER HARIAN =====
+        if ($tanggal) {
+            // 💰 OMZET: Jumlah SEMUA transaksi pada tanggal_transaksi (tidak peduli status pelunasan)
+            $totalOmzetHarian = Transaksi::whereDate('tanggal_transaksi', $tanggal)
+                ->sum('total_harga');
+
+            // 📊 PROFIT: Logika berdasarkan pembayaran
+            // ✅ Tunai/Transfer → dihitung di tanggal_transaksi
+            // ✅ Kredit hanya jika status_pelunasan='lunas' → dihitung di tanggal_pelunasan
+            
+            // Profit dari transaksi TUNAI/TRANSFER (dihitung pada tanggal_transaksi)
+            $dataHarianTransaksi = Transaksi::whereDate('tanggal_transaksi', $tanggal)
+                ->whereIn('pembayaran', ['Tunai', 'Transfer'])
+                ->whereNull('tanggal_pelunasan')  // Exclude kredit yang sudah dilunaskan
+                ->get();
+
+            $totalProfitTunaiHarian = $dataHarianTransaksi->sum(function ($item) {
+                return $item->total_harga - ($item->harga_beli_kilo * ($item->total_berat / 1000));
+            });
+
+            // Profit dari transaksi KREDIT yang SUDAH LUNAS (dihitung pada tanggal_pelunasan)
+            $dataKreditLunasHarian = Transaksi::whereDate('tanggal_pelunasan', $tanggal)
+                ->where('status_pelunasan', 'lunas')
+                ->get();
+
+            $totalProfitKreditHarian = $dataKreditLunasHarian->sum(function ($item) {
+                return $item->total_harga - ($item->harga_beli_kilo * ($item->total_berat / 1000));
+            });
+
+            $totalProfitHarian = $totalProfitTunaiHarian + $totalProfitKreditHarian;
+
+            // 🔥 PELUNASAN (TETAP SESUAI BLADE)
+            $pelunasanHariIni = Transaksi::whereDate('tanggal_pelunasan', $tanggal)
+                ->where('status_pelunasan', 'lunas')
+                ->sum('total_harga');
+
+            // ===== FILTER BULANAN =====
+        } else {
+            $totalOmzetHarian = 0;
+            $totalProfitHarian = 0;
+            $pelunasanHariIni = 0;
+        }
+        
+        // 🔥 TOTAL UNTUK FILTER BULAN
+        // Omzet: semua transaksi yang tanggal_transaksi jatuh di bulan terpilih
+        $totalOmzetBulan = Transaksi::whereMonth('tanggal_transaksi', $bulan)
+            ->whereYear('tanggal_transaksi', $tahun)
+            ->sum('total_harga');
+
+        // Profit dari transaksi TUNAI/TRANSFER (dihitung pada tanggal_transaksi)
+        $profitTanggalTransaksiBulan = Transaksi::whereMonth('tanggal_transaksi', $bulan)
+            ->whereYear('tanggal_transaksi', $tahun)
+            ->whereIn('pembayaran', ['Tunai', 'Transfer'])
+            ->whereNull('tanggal_pelunasan')  // Exclude kredit yang sudah dilunaskan
+            ->selectRaw('SUM(total_harga - (harga_beli_kilo * total_berat / 1000)) as profit')
+            ->value('profit') ?? 0;
+
+        // Profit dari transaksi KREDIT yang SUDAH LUNAS (dihitung pada tanggal_pelunasan)
+        $profitTanggalPelunasanBulan = Transaksi::whereMonth('tanggal_pelunasan', $bulan)
+            ->whereYear('tanggal_pelunasan', $tahun)
+            ->where('status_pelunasan', 'lunas')
+            ->selectRaw('SUM(total_harga - (harga_beli_kilo * total_berat / 1000)) as profit')
+            ->value('profit') ?? 0;
+
+        $totalProfitBulan = $profitTanggalTransaksiBulan + $profitTanggalPelunasanBulan;
+
+        // Pelunasan bulan: semua kredit yang lunas di bulan terpilih
+        $pelunasanBulan = Transaksi::whereMonth('tanggal_pelunasan', $bulan)
+            ->whereYear('tanggal_pelunasan', $tahun)
+            ->where('status_pelunasan', 'lunas')
+            ->sum('total_harga');
+
+        // 🔥 PAGINATION
+        if ($tanggal) {
+            $query->orderByRaw("
+        CASE 
+            WHEN tanggal_transaksi = ? THEN 1
+            WHEN tanggal_pelunasan = ? THEN 2
+        END
+    ", [$tanggal, $tanggal]);
         }
 
         $transaksis = $query
@@ -384,55 +486,125 @@ class EggGrowController extends Controller
             ->appends(request()->query());
 
         return view('egg-grow.transaksi.transaksi', [
-            'page' => 'Egg Grow',
             'transaksis' => $transaksis,
             'bulan' => $bulan,
             'tahun' => $tahun,
+            'tanggal' => $tanggal,
+            'pelunasanHariIni' => $pelunasanHariIni,
+            'totalOmzetHarian' => $totalOmzetHarian,
+            'totalProfitHarian' => $totalProfitHarian,
+            'totalOmzetBulan' => $totalOmzetBulan,
+            'totalProfitBulan' => $totalProfitBulan,
+            'pelunasanBulan' => $pelunasanBulan,
+            'page' => 'Egg Grow'
         ]);
     }
 
 
     public function cetakTransaksi(Request $request)
     {
+        $tanggal = $request->get('tanggal'); // Untuk cetak harian
         $bulan = $request->get('bulan');
         $tahun = $request->get('tahun', now()->year);
+        $tipeLayanan = $request->get('tipeLayanan', 'all'); // Untuk filter harian: 'all', 'kredit', 'tunai'
 
-        // Ambil data terbaru dari database
-        $query = Transaksi::with('pelanggan')
-            ->whereYear('tanggal_transaksi', $tahun);
+        // ===== CETAK HARIAN =====
+        if ($tanggal) {
+            $allData = Transaksi::with('pelanggan')
+                ->where(function ($q) use ($tanggal) {
+                    $q->whereDate('tanggal_transaksi', $tanggal)
+                      ->orWhere(function ($sub) use ($tanggal) {
+                          $sub->whereDate('tanggal_pelunasan', $tanggal)
+                              ->whereColumn('tanggal_pelunasan', '!=', 'tanggal_transaksi');
+                      });
+                })
+                ->get();
 
-        if ($bulan && $bulan !== 'all') {
-            $query->whereMonth('tanggal_transaksi', $bulan);
+            // Pisahkan kredit dan non-kredit
+            $dataNonKredit = $allData->where('pembayaran', '!=', 'Kredit')->values();
+            $dataKredit = $allData->where('pembayaran', 'Kredit')->values();
+
+            // Hitung totals
+            $totalOmzet = $allData->sum('total_harga');
+            $totalKredit = $dataKredit->sum('total_harga');
+            $totalCash = $totalOmzet - $totalKredit; // Cash = total omzet - kredit
+
+            $totalProfit = $allData->sum(function ($item) {
+                return $item->total_harga - ($item->harga_beli_kilo * ($item->total_berat / 1000));
+            });
+
+            $periode = Carbon::parse($tanggal)->translatedFormat('d F Y');
+            $isHarian = true;
+
+            $data = $dataNonKredit;
+            $dataKreditForView = $dataKredit;
+
+        } 
+        // ===== CETAK BULANAN =====
+        else {
+            $query = Transaksi::with('pelanggan')
+                ->where(function ($q) use ($bulan, $tahun) {
+                    // ✅ 1. Transaksi normal (berdasarkan tanggal_transaksi)
+                    $q->where(function ($sub) use ($bulan, $tahun) {
+                        $sub->whereYear('tanggal_transaksi', $tahun);
+
+                        if ($bulan && $bulan !== 'all') {
+                            $sub->whereMonth('tanggal_transaksi', $bulan);
+                        }
+                    });
+
+                    // ✅ 2. Pelunasan (berdasarkan tanggal_pelunasan)
+                    $q->orWhere(function ($sub) use ($bulan, $tahun) {
+                        $sub->whereNotNull('tanggal_pelunasan')
+                            ->whereColumn('tanggal_pelunasan', '!=', 'tanggal_transaksi')
+                            ->whereYear('tanggal_pelunasan', $tahun);
+
+                        if ($bulan && $bulan !== 'all') {
+                            $sub->whereMonth('tanggal_pelunasan', $bulan);
+                        }
+                    });
+                });
+
+            $allData = $query->get()->sortBy(function ($item) {
+                return $item->tanggal_pelunasan ?? $item->tanggal_transaksi;
+            })->values();
+
+            // Pisahkan kredit dan non-kredit
+            $data = $allData->where('pembayaran', '!=', 'Kredit')->values();
+            $dataKreditForView = $allData->where('pembayaran', 'Kredit')->values();
+
+            // Hitung totals
+            $totalOmzet = $allData->sum('total_harga');
+            $totalProfit = $allData->sum(function ($item) {
+                return $item->total_harga - ($item->harga_beli_kilo * ($item->total_berat / 1000));
+            });
+
+            // Periode
+            if ($bulan && $bulan !== 'all') {
+                $periode = Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y');
+            } else {
+                $periode = "Tahun $tahun";
+            }
+
+            $isHarian = false;
+            $totalKredit = $dataKreditForView->sum('total_harga');
+            $totalCash = $totalOmzet - $totalKredit;
         }
 
-        $data = $query->orderBy('tanggal_transaksi', 'asc')->get();
-
-        // Hitung total omzet dan profit
-        $totalOmzet = $data->sum('total_harga');
-
-        $totalProfit = $data->sum(function ($item) {
-            return $item->total_harga - ($item->harga_beli_kilo * ($item->total_berat / 1000));
-        });
-
-        // Tentukan periode laporan
-        if ($bulan && $bulan !== 'all') {
-            $periode = Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y');
-        } else {
-            $periode = "Tahun $tahun";
-        }
-
-        // Generate PDF
         $pdf = PDF::loadView('egg-grow.transaksi.transaksiLaporan', [
             'data' => $data,
+            'dataKredit' => $dataKreditForView,
             'periode' => $periode,
+            'tanggal' => $tanggal,
             'totalOmzet' => $totalOmzet,
             'totalProfit' => $totalProfit,
+            'totalKredit' => $totalKredit,
+            'totalCash' => $totalCash,
+            'isHarian' => $isHarian,
         ])->setPaper('A4', 'landscape');
 
-        // Nama file unik agar browser HP tidak men-cache PDF lama
         $filename = "laporan-transaksi-{$periode}-" . time() . ".pdf";
 
-        // Kembalikan PDF dengan header no-cache
         return response($pdf->stream($filename))
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
@@ -558,6 +730,9 @@ class EggGrowController extends Controller
                 // 1️⃣ Ambil transaksi lama
                 $transaksi = Transaksi::lockForUpdate()->findOrFail($id);
 
+                $pembayaranLama = $transaksi->pembayaran;
+                $pembayaranBaru = $request->pembayaran;
+
                 // 2️⃣ Ambil stok telur LAMA
                 $stokTelurLama = StokTelur::where('jenis_stok', 'toko')
                     ->where('jenis_telur', $transaksi->jenis_telur)
@@ -570,9 +745,10 @@ class EggGrowController extends Controller
                     ]);
                 }
 
-                // 3️⃣ Kembalikan stok & saldo lama
+                // 3️⃣ Kembalikan stok lama
                 $stokTelurLama->increment('total_stok', $transaksi->total_berat);
 
+                // 4️⃣ Ambil saldo
                 $saldo = Saldo::where('jenis_saldo', 'toko')
                     ->lockForUpdate()
                     ->first();
@@ -583,12 +759,12 @@ class EggGrowController extends Controller
                     ]);
                 }
 
-                // kurangi saldo lama hanya jika transaksi lama bukan kredit
-                if ($transaksi->pembayaran != 'Kredit') {
+                // 🔥 BALIKKAN SALDO LAMA (jika dulu bukan kredit)
+                if ($pembayaranLama != 'Kredit') {
                     $saldo->decrement('jumlah_saldo', $transaksi->total_harga);
                 }
 
-                // 4️⃣ Ambil stok telur BARU
+                // 5️⃣ Ambil stok telur BARU
                 $stokTelurBaru = StokTelur::where('jenis_stok', 'toko')
                     ->where('jenis_telur', $request->jenis_telur)
                     ->lockForUpdate()
@@ -607,7 +783,23 @@ class EggGrowController extends Controller
                     ]);
                 }
 
-                // 5️⃣ Update transaksi
+                // 6️⃣ LOGIC PELUNASAN 🔥
+                $statusPelunasan = $transaksi->status_pelunasan;
+                $tanggalPelunasan = $transaksi->tanggal_pelunasan;
+
+                // ❗ jika jadi KREDIT → reset
+                if ($pembayaranBaru == 'Kredit') {
+                    $statusPelunasan = null;
+                    $tanggalPelunasan = null;
+                }
+
+                // ❗ jika dari KREDIT → jadi TUNAI / TRANSFER
+                if ($pembayaranLama == 'Kredit' && $pembayaranBaru != 'Kredit') {
+                    $statusPelunasan = 'lunas';
+                    $tanggalPelunasan = now();
+                }
+
+                // 7️⃣ Update transaksi
                 $transaksi->update([
                     'pelanggan_id' => $request->pelanggan_id,
                     'tanggal_transaksi' => $request->tanggal_transaksi,
@@ -616,13 +808,16 @@ class EggGrowController extends Controller
                     'harga_beli_kilo' => $request->harga_beli_kilo,
                     'harga_jual_kilo' => $request->harga_jual_kilo,
                     'total_harga' => ($request->total_berat / 1000) * $request->harga_jual_kilo,
-                    'pembayaran' => $request->pembayaran
+                    'pembayaran' => $pembayaranBaru,
+                    'status_pelunasan' => $statusPelunasan,
+                    'tanggal_pelunasan' => $tanggalPelunasan,
                 ]);
 
-                // 6️⃣ Kurangi stok & tambah saldo BARU
+                // 8️⃣ Kurangi stok BARU
                 $stokTelurBaru->decrement('total_stok', $request->total_berat);
-                // tambah saldo baru jika bukan kredit
-                if ($request->pembayaran != 'Kredit') {
+
+                // 🔥 TAMBAH SALDO BARU (jika bukan kredit)
+                if ($pembayaranBaru != 'Kredit') {
                     $saldo->increment('jumlah_saldo', $request->total_harga);
                 }
             });
@@ -630,12 +825,12 @@ class EggGrowController extends Controller
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             return back()
-                ->with('error', 'Terjadi kesalahan sistem saat update transaksi.')
+                ->with('error', $e->getMessage())
                 ->withInput();
         }
 
         return redirect('/dashboard/egg-grow/transaksi')
-            ->with('messageUpdateTransaksi', 'Berhasil Update Transaksi');
+            ->with('success', 'Transaksi berhasil diupdate');;
     }
 
     public function destroyTransaksi($id)
@@ -710,68 +905,82 @@ class EggGrowController extends Controller
 
     public function pengeluaran(Request $request)
     {
-        // Default bulan ke bulan saat ini, tahun ke tahun saat ini
-        $bulan = $request->input('bulan', now()->month);
-        $tahun = $request->input('tahun', now()->year);
+        $tanggal = $request->get('tanggal');
+        $bulan = $request->has('bulan') ? $request->bulan : now()->month;
+        $tahun = $request->has('tahun') ? $request->tahun : now()->year;
 
         $query = PengeluaranToko::query();
 
-        // Filter TAHUN (wajib)
-        $query->whereYear('tanggal', $tahun);
+        // 🔥 FILTER UTAMA
+        if ($tanggal) {
+            $query->whereDate('tanggal', $tanggal);
+        } else {
+            $query->whereYear('tanggal', $tahun);
 
-        // Filter BULAN (kecuali jika 'all')
-        if ($bulan !== 'all') {
-            $query->whereMonth('tanggal', $bulan);
+            if ($bulan !== 'all') {
+                $query->whereMonth('tanggal', $bulan);
+            }
         }
 
         // Urut terbaru
         $query->orderBy('tanggal', 'desc');
 
         // Paginate
-        $data_pengeluaran = $query->paginate(10)->appends(compact('bulan', 'tahun'));
+        $data_pengeluaran = $query->paginate(10)->appends(request()->query());
 
         return view('egg-grow.pengeluaran.pengeluaran', [
             'page' => 'Egg Grow',
             'data_pengeluaran' => $data_pengeluaran,
             'bulan' => $bulan,
-            'tahun' => $tahun
+            'tahun' => $tahun,
+            'tanggal' => $tanggal
         ]);
     }
 
     // Fungsi cetak PDF
     public function cetakPengeluaran(Request $request)
     {
-        $query = PengeluaranToko::query();
+        $tanggal = $request->get('tanggal');
+        $bulan = $request->get('bulan');
+        $tahun = $request->get('tahun', now()->year);
 
-        // Filter BULAN
-        if ($request->filled('bulan') && $request->bulan !== 'all') {
-            $query->whereMonth('tanggal', $request->bulan);
+        // ===== CETAK HARIAN =====
+        if ($tanggal) {
+            $data_pengeluaran = PengeluaranToko::whereDate('tanggal', $tanggal)
+                ->orderBy('tanggal', 'asc')
+                ->get();
+
+            $periode = Carbon::parse($tanggal)->translatedFormat('d F Y');
+            $isHarian = true;
         }
+        // ===== CETAK BULANAN =====
+        else {
+            $query = PengeluaranToko::query();
+            $query->whereYear('tanggal', $tahun);
 
-        // Filter TAHUN
-        if ($request->filled('tahun')) {
-            $query->whereYear('tanggal', $request->tahun);
-        } else {
-            $query->whereYear('tanggal', now()->year);
-        }
+            if ($bulan && $bulan !== 'all') {
+                $query->whereMonth('tanggal', $bulan);
+            }
 
-        // Urut terbaru
-        $query->orderBy('tanggal', 'desc');
+            $data_pengeluaran = $query->orderBy('tanggal', 'asc')->get();
 
-        $data_pengeluaran = $query->get();
+            // Tentukan periode
+            if ($bulan && $bulan !== 'all') {
+                $periode = Carbon::createFromDate($tahun, $bulan, 1)
+                    ->translatedFormat('F Y');
+            } else {
+                $periode = "Tahun $tahun";
+            }
 
-        // Tentukan periode
-        if ($request->filled('bulan') && $request->bulan !== 'all') {
-            $periode = Carbon::createFromDate($request->tahun, $request->bulan, 1)
-                ->translatedFormat('F Y');
-        } else {
-            $periode = "Tahun " . ($request->tahun ?? now()->year);
+            $isHarian = false;
         }
 
         // Load PDF
         $pdf = PDF::loadView('egg-grow.pengeluaran.pengeluaranLaporan', [
             'data_pengeluaran' => $data_pengeluaran,
-            'periode' => $periode
+            'periode' => $periode,
+            'tanggal' => $tanggal,
+            'isHarian' => $isHarian
         ])->setPaper('A4', 'portrait');
 
         // Nama file unik → supaya HP tidak cache PDF lama
@@ -1052,12 +1261,22 @@ class EggGrowController extends Controller
             ->with('messageDeletePengeluaran', 'Pengeluaran berhasil dihapus');
     }
 
-    public function kredit()
+    public function kredit(Request $request)
     {
-        $data = Transaksi::with('pelanggan')
-            ->where('pembayaran', 'Kredit')
+        $query = Transaksi::with('pelanggan')
+            ->where('pembayaran', 'Kredit');
+
+        // 🔍 Search berdasarkan nama pelanggan
+        if ($request->filled('q')) {
+            $query->whereHas('pelanggan', function ($q) use ($request) {
+                $q->where('nama_pelanggan', 'like', '%' . $request->q . '%');
+            });
+        }
+
+        $data = $query
             ->orderBy('tanggal_transaksi', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString(); // ⬅ penting agar filter tidak hilang saat pindah halaman
 
         return view('egg-grow.kredit.kredit', compact('data'), [
             'page' => 'Egg Grow'
@@ -1096,7 +1315,9 @@ class EggGrowController extends Controller
 
                 // 4️⃣ Update metode pembayaran
                 $transaksi->update([
-                    'pembayaran' => $request->pembayaran
+                    'pembayaran' => $request->pembayaran,
+                    'status_pelunasan' => 'lunas',
+                    'tanggal_pelunasan' => now()
                 ]);
             });
         } catch (\Exception $e) {
