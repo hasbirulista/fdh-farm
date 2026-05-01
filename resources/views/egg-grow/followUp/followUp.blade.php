@@ -75,6 +75,7 @@
                             <th>Pelanggan</th>
                             <th>Transaksi Terakhir</th>
                             <th>Pembelian Terakhir</th>
+                            <th>Harga Jual</th>
                             <th>Tanggal Repeat</th>
                             <th>No Hp</th>
                             <th>Sisa Hari</th>
@@ -92,6 +93,7 @@
                                 <td>{{ $row['nama_pelanggan'] }}</td>
                                 <td>{{ $row['tanggal_transaksi'] }}</td>
                                 <td>{{ $row['pembelian_terakhir_kg'] }} Kg</td>
+                                <td>Rp.{{ $row['harga_kilo'] }}/Kg</td>
                                 <td>{{ $row['tanggal_repeat'] }}</td>
                                 <td>{{ $row['no_hp'] }}</td>
                                 <td class="text-center fw-bold">

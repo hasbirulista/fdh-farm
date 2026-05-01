@@ -144,7 +144,18 @@
 
                 <tfoot>
                     @php
-                        $totalKg = $allTransactions->sum('total_berat') / 1000;
+                        // Total Berat: transaksi asli (exclude pelunasan) + kredit
+                        $totalKg = ($data->filter(function ($item) {
+                            return !($item->tanggal_pelunasan && $item->tanggal_pelunasan != $item->tanggal_transaksi);
+                        })->sum('total_berat') + $dataKredit->sum('total_berat')) / 1000;
+                        
+                        // Total Omzet: dari semua transaksi tunai/transfer + kredit
+                        $totalOmzetAsli = $data->sum('total_harga') + $dataKredit->sum('total_harga');
+                        
+                        // Total Profit: hanya dari tunai/transfer (exclude kredit)
+                        $totalProfitAsli = $data->sum(function ($item) {
+                            return $item->total_harga - $item->harga_beli_kilo * ($item->total_berat / 1000);
+                        });
                     @endphp
 
                     <tr>
@@ -156,7 +167,7 @@
                     <tr>
                         <td colspan="7" class="text-right">TOTAL OMZET</td>
                         <td colspan="3" class="text-center">
-                            Rp {{ number_format($totalOmzet, 0, ',', '.') }}
+                            Rp {{ number_format($totalOmzetAsli, 0, ',', '.') }}
                         </td>
                     </tr>
                     @if ($totalKredit > 0)
@@ -176,7 +187,7 @@
                     <tr>
                         <td colspan="7" class="text-right">TOTAL PROFIT</td>
                         <td colspan="3" class="text-center">
-                            Rp {{ number_format($totalProfit, 0, ',', '.') }}
+                            Rp {{ number_format($totalProfitAsli, 0, ',', '.') }}
                         </td>
                     </tr>
                 </tfoot>
@@ -330,6 +341,12 @@
         <div class="section" style="page-break-inside: avoid;">
             <table>
                 <tfoot>
+                    @php
+                        // Hitung total profit hanya dari tunai/transfer (tanpa kredit)
+                        $totalProfitTunaiTransfer = $data->sum(function ($item) {
+                            return $item->total_harga - $item->harga_beli_kilo * ($item->total_berat / 1000);
+                        });
+                    @endphp
                     <tr>
                         <td colspan="7" class="text-right" style="background-color: #d0d0d0; font-size: 13px;">TOTAL
                             OMZET (TUNAI/TRANSFER + KREDIT)</td>
@@ -339,9 +356,9 @@
                     </tr>
                     <tr>
                         <td colspan="7" class="text-right" style="background-color: #d0d0d0; font-size: 13px;">TOTAL
-                            PROFIT (TUNAI/TRANSFER + KREDIT)</td>
+                            PROFIT (TUNAI/TRANSFER SAJA - EXCLUDE KREDIT)</td>
                         <td colspan="3" class="text-center" style="background-color: #d0d0d0; font-size: 13px;">
-                            Rp {{ number_format($totalProfit, 0, ',', '.') }}
+                            Rp {{ number_format($totalProfitTunaiTransfer, 0, ',', '.') }}
                         </td>
                     </tr>
                 </tfoot>

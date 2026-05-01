@@ -52,9 +52,10 @@ class RepeatOrderController extends Controller
                 return [
                     'nama_pelanggan'        => $pelanggan->nama_pelanggan,
                     'no_hp'                 => $pelanggan->no_hp,
-                    'tanggal_transaksi'     => $tanggalTransaksi->format('Y-m-d'),
+                    'tanggal_transaksi'     => $tanggalTransaksi->format('d/m/Y'),
                     'pembelian_terakhir_kg' => floor($transaksiTerakhir->total_berat / 1000),
-                    'tanggal_repeat'        => $tanggalRepeat->format('Y-m-d'),
+                    'harga_kilo'            => number_format(($transaksiTerakhir->harga_jual_kilo), 0, ',', '.'),
+                    'tanggal_repeat'        => $tanggalRepeat->format('d/m/Y'),
                     'sisa_hari'             => $sisaHari,
                     'label_hari'            => $labelHari,
                     'status'                => $status,

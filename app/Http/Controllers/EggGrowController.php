@@ -50,15 +50,21 @@ class EggGrowController extends Controller
 
         // ===== HITUNG PROFIT HARI INI =====
         $hariIni = Carbon::today();
-        $transaksiHariIni = Transaksi::whereDate('tanggal_transaksi', $hariIni)->get();
 
-        $profitHariIni = 0;
-        foreach ($transaksiHariIni as $transaksi) {
-            // Hitung profit manual
-            $hargaBeli = ($transaksi->total_berat / 1000) * $transaksi->harga_beli_kilo;
-            $hargaJual = $transaksi->total_harga;
-            $profitHariIni += ($hargaJual - $hargaBeli);
-        }
+        // Profit dari transaksi TUNAI/TRANSFER (dihitung pada tanggal_transaksi)
+        $profitTanggalTransaksi = Transaksi::whereDate('tanggal_transaksi', $hariIni)
+            ->whereIn('pembayaran', ['Tunai', 'Transfer'])
+            ->whereNull('tanggal_pelunasan')  // Exclude kredit yang sudah dilunaskan
+            ->selectRaw('SUM(total_harga - (harga_beli_kilo * total_berat / 1000)) as profit')
+            ->value('profit') ?? 0;
+
+        // Profit dari transaksi KREDIT yang SUDAH LUNAS (dihitung pada tanggal_pelunasan)
+        $profitTanggalPelunasan = Transaksi::whereDate('tanggal_pelunasan', $hariIni)
+            ->where('status_pelunasan', 'lunas')
+            ->selectRaw('SUM(total_harga - (harga_beli_kilo * total_berat / 1000)) as profit')
+            ->value('profit') ?? 0;
+
+        $profitHariIni = $profitTanggalTransaksi + $profitTanggalPelunasan;
 
         // ===== HARGA RATA-RATA PER JENIS TELUR =====
         $hargaOmega = Transaksi::whereDate('tanggal_transaksi', $hariIni)
