@@ -1278,7 +1278,10 @@ class GudangController extends Controller
                     ->where('jenis_saldo', 'gudang')
                     ->firstOrFail();
 
-                // 3️⃣ KEMBALIKAN STOK LAMA JIKA PAKAN
+                // 3️⃣ KEMBALIKAN SALDO LAMA (APAPUN JENIS PENGELUARANNYA)
+                $saldo->increment('jumlah_saldo', $pengeluaran->total_harga);
+
+                // 3a️⃣ JIKA PENGELUARAN LAMA ADALAH PAKAN, KEMBALIKAN STOK & HAPUS PAKAN MASUK
                 if ($pengeluaran->jenis_pengeluaran === 'pakan') {
                     $stokLama = StokPakan::lockForUpdate()
                         ->where('jenis_pakan', $pengeluaran->jenis_pakan)
@@ -1295,9 +1298,6 @@ class GudangController extends Controller
                     if ($pakanMasukLama) {
                         $pakanMasukLama->delete();
                     }
-
-                    // kembalikan saldo sebelumnya
-                    $saldo->increment('jumlah_saldo', $pengeluaran->total_harga);
                 }
 
                 // 4️⃣ HITUNG TOTAL HARGA BARU
@@ -1320,7 +1320,10 @@ class GudangController extends Controller
                     'keterangan' => $request->keterangan,
                 ]);
 
-                // 6️⃣ JIKA PAKAN, UPDATE TB_PAKAN_MASUK & TB_STOK_PAKAN
+                // 6️⃣ KURANGI SALDO BARU (APAPUN JENIS PENGELUARANNYA)
+                $saldo->decrement('jumlah_saldo', $totalHarga);
+
+                // 6a️⃣ JIKA PENGELUARAN BARU ADALAH PAKAN, UPDATE TB_PAKAN_MASUK & TB_STOK_PAKAN
                 if ($request->jenis_pengeluaran === 'pakan') {
 
                     // simpan pakan masuk baru
@@ -1345,9 +1348,6 @@ class GudangController extends Controller
                             'berat_total' => $request->berat_total * 1000,
                         ]);
                     }
-
-                    // kurangi saldo
-                    $saldo->decrement('jumlah_saldo', $totalHarga);
                 }
             });
 

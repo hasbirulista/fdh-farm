@@ -299,7 +299,8 @@
                     </select>
                 </div>
             </div>
-            <input type="hidden" id="populasi_ayam" name="populasi_ayam" value="{{ $data_produksi->populasi_ayam }}">
+            <input type="hidden" id="populasi_ayam" name="populasi_ayam" <input type="hidden" id="populasi_ayam"
+                value="{{ $data_produksi->populasi_ayam + $data_produksi->mati + $data_produksi->apkir }}">>
         </div>
 
         <!-- 🐔 Data Kesehatan Ayam -->
