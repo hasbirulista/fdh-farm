@@ -784,15 +784,42 @@ class KandangController extends Controller
             'populasi_ayam.numeric' => 'Populasi ayam harus berupa angka.',
         ]);
 
-        //tambah data ke tb_kandang
-        kandang::create([
-            'nama_kandang' => $request->nama_kandang,
-            'chicken_in' => $request->chicken_in,
-            'anak_kandang' => $request->anak_kandang,
-            'populasi_ayam' => $request->populasi_ayam,
-        ]);
+        try {
+            DB::transaction(function () use ($request) {
+                // ===============================
+                // 1️⃣ BUAT KANDANG
+                // ===============================
+                $kandang = Kandang::create([
+                    'nama_kandang' => $request->nama_kandang,
+                    'chicken_in' => $request->chicken_in,
+                    'anak_kandang' => $request->anak_kandang,
+                    'populasi_ayam' => $request->populasi_ayam,
+                ]);
 
-        return redirect('/dashboard/kandang/tambah-kandang')->with('messageTambahKandang', 'Berhasil Menambahkan Kandang');
+                // ===============================
+                // 2️⃣ OTOMATIS BUAT KANDANG_PAKAN
+                // ===============================
+                $daftarJenisPakan = ['Grower', 'Layer'];
+
+                foreach ($daftarJenisPakan as $jenis) {
+                    $stokPakan = StokPakan::where('jenis_pakan', $jenis)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($stokPakan) {
+                        KandangPakan::create([
+                            'kandang_id' => $kandang->id,
+                            'stok_pakan_id' => $stokPakan->id,
+                            'stok' => 0,
+                        ]);
+                    }
+                }
+            });
+
+            return redirect('/dashboard/kandang/tambah-kandang')->with('messageTambahKandang', 'Berhasil Menambahkan Kandang');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error menambah kandang: ' . $e->getMessage());
+        }
     }
 
     public function updateKandang($id, Request $request)
@@ -826,8 +853,36 @@ class KandangController extends Controller
     //delete data
     public function destroyKandang($id)
     {
-        //query hapus data
-        kandang::findOrFail($id)->delete();
-        return redirect('/dashboard/kandang/tambah-kandang')->with('messageDeleteKandang', 'Berhasil Hapus Kandang');
+        try {
+            DB::transaction(function () use ($id) {
+                // ===============================
+                // 1️⃣ AMBIL DATA KANDANG
+                // ===============================
+                $kandang = Kandang::lockForUpdate()->findOrFail($id);
+                $namaKandang = $kandang->nama_kandang;
+
+                // ===============================
+                // 2️⃣ HAPUS SEMUA PRODUKSI KANDANG
+                // ===============================
+                Produksi::where('nama_kandang', $namaKandang)
+                    ->lockForUpdate()
+                    ->delete();
+
+                // ===============================
+                // 3️⃣ HAPUS KANDANG_PAKAN
+                // ===============================
+                KandangPakan::where('kandang_id', $kandang->id)
+                    ->delete();
+
+                // ===============================
+                // 4️⃣ HAPUS KANDANG
+                // ===============================
+                $kandang->delete();
+            });
+
+            return redirect('/dashboard/kandang/tambah-kandang')->with('messageDeleteKandang', 'Berhasil Hapus Kandang');
+        } catch (\Exception $e) {
+            return redirect('/dashboard/kandang/tambah-kandang')->with('error', 'Error menghapus kandang: ' . $e->getMessage());
+        }
     }
 }

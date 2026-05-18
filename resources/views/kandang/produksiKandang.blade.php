@@ -570,7 +570,7 @@
 
                             <td class="text-center">
                                 <span class="badge bg-success">
-                                    {{ number_format($produksi->jumlah_butir / ($produksi->jumlah_gram / 1000), 2, ',', '.') }}
+                                    {{ $produksi->jumlah_gram > 0 ? number_format($produksi->jumlah_butir / ($produksi->jumlah_gram / 1000), 2, ',', '.') : '-' }}
                                 </span>
                             </td>
 

@@ -104,6 +104,15 @@
             border: 1px solid #e9ecef;
             border-radius: 8px;
             overflow: hidden;
+            transition: none !important;
+            transform: none !important;
+        }
+
+        .card:hover {
+            transform: none !important;
+            transition: none !important;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .card-header {
@@ -142,6 +151,24 @@
             vertical-align: middle;
         }
 
+        .table tbody tr:hover {
+            background-color: transparent !important;
+            transform: none !important;
+            transition: none !important;
+            box-shadow: none !important;
+        }
+
+        .table tbody tr {
+            transition: none !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .table tbody td {
+            transition: none !important;
+            transform: none !important;
+        }
+
         .btn-sm {
             padding: 5px 10px;
             font-size: 0.8rem;
@@ -149,6 +176,13 @@
             border: none;
             font-weight: 600;
             cursor: pointer;
+            transition: none !important;
+            transform: none !important;
+        }
+
+        .btn-sm:hover {
+            transform: none !important;
+            transition: none !important;
         }
 
         .btn-edit {
@@ -330,34 +364,37 @@
                         </tbody>
                     </table>
                 </div>
+
+                @foreach ($data_kandang as $kandang)
+                    <div class="modal fade" id="hapus{{ $kandang->id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <form action="/dashboard/kandang/tambah-kandang/{{ $kandang->id }}" method="POST" class="modal-content">
+                                @csrf
+                                @method('DELETE')
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Hapus Kandang</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    Yakin ingin menghapus kandang
+                                    <strong>{{ $kandang->nama_kandang }}</strong> ?
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        Batal
+                                    </button>
+                                    <button type="submit" class="btn btn-danger">
+                                        Hapus
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
             @endif
-        </div>
-    </div>
-    <div class="modal fade" id="hapus{{ $kandang->id }}" tabindex="-1">
-        <div class="modal-dialog">
-            <form action="/dashboard/kandang/tambah-kandang/{{ $kandang->id }}" method="POST" class="modal-content">
-                @csrf
-                @method('DELETE')
-
-                <div class="modal-header">
-                    <h5 class="modal-title">Hapus Kandang</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                    Yakin ingin menghapus kandang
-                    <strong>{{ $kandang->nama_kandang }}</strong> ?
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Batal
-                    </button>
-                    <button type="submit" class="btn btn-danger">
-                        Hapus
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
