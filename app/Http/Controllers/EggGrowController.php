@@ -67,13 +67,28 @@ class EggGrowController extends Controller
         $profitHariIni = $profitTanggalTransaksi + $profitTanggalPelunasan;
 
         // ===== HARGA RATA-RATA PER JENIS TELUR =====
-        $hargaOmega = Transaksi::whereDate('tanggal_transaksi', $hariIni)
-            ->where('jenis_telur', 'Omega')
-            ->avg('harga_jual_kilo');
+        // ===== OMEGA =====
+        $omegaQuery = Transaksi::whereDate('tanggal_transaksi', $hariIni)
+            ->where('jenis_telur', 'Omega');
 
-        $hargaBiasa = Transaksi::whereDate('tanggal_transaksi', $hariIni)
-            ->where('jenis_telur', 'Biasa')
-            ->avg('harga_jual_kilo');
+        $totalOmzetOmega = (clone $omegaQuery)->sum('total_harga');
+        $totalBeratOmega = (clone $omegaQuery)->sum('total_berat');
+
+        $hargaOmega = $totalBeratOmega > 0
+            ? $totalOmzetOmega / ($totalBeratOmega / 1000)
+            : 0;
+
+
+        // ===== BIASA =====
+        $biasaQuery = Transaksi::whereDate('tanggal_transaksi', $hariIni)
+            ->where('jenis_telur', 'Biasa');
+
+        $totalOmzetBiasa = (clone $biasaQuery)->sum('total_harga');
+        $totalBeratBiasa = (clone $biasaQuery)->sum('total_berat');
+
+        $hargaBiasa = $totalBeratBiasa > 0
+            ? $totalOmzetBiasa / ($totalBeratBiasa / 1000)
+            : 0;
 
         // default kalau null
         $hargaOmega = $hargaOmega ?? 0;
@@ -625,7 +640,7 @@ class EggGrowController extends Controller
 
     public function tambahTransaksi()
     {
-        $pelanggans = Pelanggan::all();
+        $pelanggans = Pelanggan::orderBy('nama_pelanggan', 'asc')->get();
         return view('egg-grow.transaksi.tambahTransaksi', compact('pelanggans'), [
             'page' => 'Egg Grow'
 
@@ -634,6 +649,13 @@ class EggGrowController extends Controller
 
     public function storeTransaksi(Request $request)
     {
+        $request->merge([
+            'total_berat' => str_replace('.', '', $request->total_berat),
+            'harga_beli_kilo' => str_replace('.', '', $request->harga_beli_kilo),
+            'harga_jual_kilo' => str_replace('.', '', $request->harga_jual_kilo),
+            'total_harga' => str_replace('.', '', $request->total_harga),
+        ]);
+        
         $request->validate([
             'pelanggan_id' => 'required|exists:tb_pelanggan,id',
             'tanggal_transaksi' => 'required|date',
@@ -664,7 +686,7 @@ class EggGrowController extends Controller
                     throw ValidationException::withMessages([
                         'total_berat' => 'Stok telur tidak mencukupi. Sisa stok telur (' . $stokTelur->jenis_telur . ') : ' . $stokTelur->total_stok . ' gram.'
                     ]);
-                }
+                }                
 
                 // 2️⃣ Simpan transaksi
                 Transaksi::create([
@@ -712,6 +734,14 @@ class EggGrowController extends Controller
     {
         $pelanggans = Pelanggan::all();
         $transaksi = Transaksi::find($id);
+
+        if (
+            auth()->user()->role !== 'owner' &&
+            !\Carbon\Carbon::parse($transaksi->tanggal_transaksi)->isToday()
+        ) {
+            abort(403, 'Anda tidak memiliki akses');
+        }
+
         return view('egg-grow.transaksi.editTransaksi', compact('transaksi', 'pelanggans'), [
             'page' => 'Egg Grow'
         ]);
@@ -719,6 +749,13 @@ class EggGrowController extends Controller
 
     public function updateTransaksi(Request $request, $id)
     {
+        $request->merge([
+            'total_berat' => str_replace('.', '', $request->total_berat),
+            'harga_beli_kilo' => str_replace('.', '', $request->harga_beli_kilo),
+            'harga_jual_kilo' => str_replace('.', '', $request->harga_jual_kilo),
+            'total_harga' => str_replace('.', '', $request->total_harga),
+        ]);
+
         $request->validate([
             'pelanggan_id' => 'required|exists:tb_pelanggan,id',
             'tanggal_transaksi' => 'required|date',
@@ -836,7 +873,7 @@ class EggGrowController extends Controller
         }
 
         return redirect('/dashboard/egg-grow/transaksi')
-            ->with('success', 'Transaksi berhasil diupdate');;
+            ->with('messageUpdateTransaksi', 'Transaksi berhasil diupdate');;
     }
 
     public function destroyTransaksi($id)
@@ -1011,6 +1048,23 @@ class EggGrowController extends Controller
 
     public function storePengeluaran(Request $request)
     {
+        // Bersihkan format titik
+        $request->merge([
+            'berat_total' => str_replace('.', '', $request->berat_total),
+            'harga_kilo' => str_replace('.', '', $request->harga_kilo),
+            'nominal_telur' => str_replace('.', '', $request->nominal_telur),
+            'nominal_lainnya' => str_replace('.', '', $request->nominal_lainnya),
+        ]);
+
+        // Ubah ke integer
+        $request->merge([
+            'berat_total' => (int) $request->berat_total,
+            'harga_kilo' => (int) $request->harga_kilo,
+            'nominal_telur' => (int) $request->nominal_telur,
+            'nominal_lainnya' => (int) $request->nominal_lainnya,
+        ]);
+
+
         $request->validate([
             'jenis_pengeluaran' => 'required|in:telur pecah,lainnya,beli telur',
             'tanggal' => 'required|date',
@@ -1032,8 +1086,11 @@ class EggGrowController extends Controller
             ]);
         }
 
+        // Jika bukan owner, tanggal otomatis hari ini
+        $tanggal = auth()->user()->role !== 'owner' ? now()->toDateString() : $request->tanggal;
+
         try {
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request, $tanggal) {
 
                 $saldo = Saldo::where('jenis_saldo', 'toko')->lockForUpdate()->first();
 
@@ -1066,7 +1123,7 @@ class EggGrowController extends Controller
 
                     PengeluaranToko::create([
                         'jenis_pengeluaran' => 'telur pecah',
-                        'tanggal' => $request->tanggal,
+                        'tanggal' => $tanggal,
                         'jenis_telur' => $request->jenis_telur,
                         'berat_total' => $request->berat_total,
                         'nominal' => $request->nominal_telur,
@@ -1086,7 +1143,7 @@ class EggGrowController extends Controller
 
                     PengeluaranToko::create([
                         'jenis_pengeluaran' => 'lainnya',
-                        'tanggal' => $request->tanggal,
+                        'tanggal' => $tanggal,
                         'nama_pengeluaran' => $request->nama_pengeluaran,
                         'nominal' => $request->nominal_lainnya,
                         'keterangan' => $request->keterangan,
@@ -1111,7 +1168,13 @@ class EggGrowController extends Controller
     {
         $pengeluaran = PengeluaranToko::findOrFail($id);
 
-
+        if (
+            auth()->user()->role !== 'owner' &&
+            !\Carbon\Carbon::parse($pengeluaran->tanggal)->isToday()
+        ) {
+            abort(403, 'Anda tidak memiliki akses');
+        }
+    
         return view('egg-grow.pengeluaran.editPengeluaran', [
             'page' => 'Egg Grow',
             'data_pengeluaran' => $pengeluaran,

@@ -1,3 +1,7 @@
+@php
+    use Illuminate\Support\Facades\Auth;
+    $role = Auth::user()->role;
+@endphp
 @extends('partials.master')
 
 @section('content')
@@ -94,7 +98,7 @@
                         target="_blank" class="btn-custom print">
                         🖨️ Cetak Harian
                     </a>
-                {{-- CETAK LAPORAN BULANAN --}}
+                    {{-- CETAK LAPORAN BULANAN --}}
                 @elseif ($bulan !== 'all')
                     <a href="{{ route('transaksi.cetak', ['bulan' => $bulan, 'tahun' => $tahun, '_t' => time()]) }}"
                         target="_blank" class="btn-custom print">
@@ -155,7 +159,8 @@
         @if (request('tanggal'))
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
-                    <h6 class="mb-0 text-muted">Ringkasan Harian - {{ \Carbon\Carbon::parse(request('tanggal'))->translatedFormat('d F Y') }}</h6>
+                    <h6 class="mb-0 text-muted">Ringkasan Harian -
+                        {{ \Carbon\Carbon::parse(request('tanggal'))->translatedFormat('d F Y') }}</h6>
                 </div>
                 <div class="card-body d-flex justify-content-between">
                     <div>
@@ -175,7 +180,9 @@
         @elseif ($bulan !== 'all' && is_numeric($bulan))
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
-                    <h6 class="mb-0 text-muted">Ringkasan Bulanan - {{ \Carbon\Carbon::create()->month((int)$bulan)->translatedFormat('F') }} {{ $tahun }}</h6>
+                    <h6 class="mb-0 text-muted">Ringkasan Bulanan -
+                        {{ \Carbon\Carbon::create()->month((int) $bulan)->translatedFormat('F') }} {{ $tahun }}
+                    </h6>
                 </div>
                 <div class="card-body d-flex justify-content-between">
                     <div>
@@ -242,12 +249,17 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex flex-column flex-md-row justify-content-center gap-1">
-                                        <a href="/dashboard/egg-grow/transaksi/{{ $transaksi->id }}/edit"
-                                            class="btn btn-warning btn-sm w-100 w-md-auto mb-1 mb-md-0">Edit</a>
-                                        <button type="button" class="btn btn-danger btn-sm w-100 w-md-auto"
-                                            data-bs-toggle="modal" data-bs-target="#hapus{{ $transaksi->id }}">
-                                            Hapus
-                                        </button>
+                                        @php
+                                            $isToday = \Carbon\Carbon::parse($transaksi->tanggal_transaksi)->isToday();
+                                        @endphp
+                                        @if ($role === 'owner' || $isToday)
+                                            <a href="/dashboard/egg-grow/transaksi/{{ $transaksi->id }}/edit"
+                                                class="btn btn-warning btn-sm w-100 w-md-auto mb-1 mb-md-0">Edit</a>
+                                            <button type="button" class="btn btn-danger btn-sm w-100 w-md-auto"
+                                                data-bs-toggle="modal" data-bs-target="#hapus{{ $transaksi->id }}">
+                                                Hapus
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

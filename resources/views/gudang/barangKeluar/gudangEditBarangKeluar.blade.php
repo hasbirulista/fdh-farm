@@ -109,6 +109,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -157,8 +158,8 @@
                 </div>
                 <div class="form-group">
                     <label for="nama_konsumen">Nama Konsumen</label>
-                    <input type="text" required name="nama_konsumen" id="nama_konsumen"
-                        placeholder="Nama Konsumen" value="{{ $data_barang_keluar->nama_konsumen }}">
+                    <input type="text" required name="nama_konsumen" id="nama_konsumen" placeholder="Nama Konsumen"
+                        value="{{ $data_barang_keluar->nama_konsumen }}">
                 </div>
             </div>
         </div>
@@ -171,27 +172,30 @@
                     <label for="jenis_barang_display">Jenis Barang</label>
                     <input type="text" id="jenis_barang_display" readonly
                         value="{{ $data_barang_keluar->jenis_barang === 'telur' ? '🥚 Telur' : '🐓 Ayam Apkir' }}">
-                    <input type="hidden" id="jenis_barang" name="jenis_barang" 
+                    <input type="hidden" id="jenis_barang" name="jenis_barang"
                         value="{{ $data_barang_keluar->jenis_barang }}">
                 </div>
             </div>
         </div>
 
         {{-- SECTION 3: TELUR --}}
-        <div id="telur-section" class="form-section {{ $data_barang_keluar->jenis_barang === 'telur' ? 'visible' : 'hidden' }}">
+        <div id="telur-section"
+            class="form-section {{ $data_barang_keluar->jenis_barang === 'telur' ? 'visible' : 'hidden' }}">
             <h5>🥚 Detail Telur</h5>
             <div class="form-row">
                 <div class="form-group">
                     <label for="jenis_telur">Jenis Telur</label>
                     <select name="jenis_telur" id="jenis_telur">
                         <option value="" disabled>Pilih Jenis Telur</option>
-                        <option value="Omega" {{ $data_barang_keluar->jenis_telur == 'Omega' ? 'selected' : '' }}>Omega</option>
-                        <option value="Biasa" {{ $data_barang_keluar->jenis_telur == 'Biasa' ? 'selected' : '' }}>Biasa</option>
+                        <option value="Omega" {{ $data_barang_keluar->jenis_telur == 'Omega' ? 'selected' : '' }}>Omega
+                        </option>
+                        <option value="Biasa" {{ $data_barang_keluar->jenis_telur == 'Biasa' ? 'selected' : '' }}>Biasa
+                        </option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="jumlah_barang_keluar">Jumlah Telur (gram)</label>
-                    <input type="number" name="jumlah_barang_keluar" id="jumlah_barang_keluar"
+                    <input type="text" inputmode="numeric" name="jumlah_barang_keluar" id="jumlah_barang_keluar"
                         placeholder="Jumlah dalam gram" min="0" step="0.01"
                         value="{{ $data_barang_keluar->jumlah_barang_keluar ?? '' }}">
                 </div>
@@ -199,31 +203,31 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="harga_kilo">Harga per Kg</label>
-                    <input type="number" name="harga_kilo" id="harga_kilo"
-                        placeholder="Harga per Kg" min="0" step="0.01"
-                        value="{{ $data_barang_keluar->harga_kilo ?? '' }}">
+                    <input type="text" inputmode="numeric" name="harga_kilo" id="harga_kilo" placeholder="Harga per Kg"
+                        min="0" step="0.01" value="{{ $data_barang_keluar->harga_kilo ?? '' }}">
                 </div>
                 <div class="form-group">
                     <label for="total_harga">Total Harga</label>
-                    <input type="number" readonly id="total_harga" name="total_harga"
+                    <input type="text" inputmode="numeric" readonly id="total_harga" name="total_harga"
                         placeholder="Otomatis terhitung" value="{{ $data_barang_keluar->total_harga ?? '' }}">
                 </div>
             </div>
         </div>
 
         {{-- SECTION 4: AYAM APKIR --}}
-        <div id="ayam_apkir-section" class="form-section {{ $data_barang_keluar->jenis_barang === 'ayam_apkir' ? 'visible' : 'hidden' }}">
+        <div id="ayam_apkir-section"
+            class="form-section {{ $data_barang_keluar->jenis_barang === 'ayam_apkir' ? 'visible' : 'hidden' }}">
             <h5>🐓 Detail Ayam Apkir</h5>
             <div class="form-row">
                 <div class="form-group">
                     <label for="jumlah_ayam">Jumlah Ayam (ekor)</label>
-                    <input type="number" name="jumlah_ayam" id="jumlah_ayam"
+                    <input type="text" inputmode="numeric" name="jumlah_ayam" id="jumlah_ayam"
                         placeholder="Jumlah dalam ekor" min="0"
                         value="{{ $data_barang_keluar->jumlah_ayam ?? '' }}">
                 </div>
                 <div class="form-group">
                     <label for="total_harga_ayam">Total Harga</label>
-                    <input type="number" name="total_harga_ayam" id="total_harga_ayam"
+                    <input type="text" inputmode="numeric" name="total_harga_ayam" id="total_harga_ayam"
                         placeholder="Masukkan total harga" min="0" step="0.01"
                         value="{{ $data_barang_keluar->total_harga ?? '' }}">
                 </div>
@@ -240,49 +244,92 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const jenisBrg = '{{ $data_barang_keluar->jenis_barang }}';
+            const jenisBarangSelect = document.getElementById('jenis_barang');
             const telurSection = document.getElementById('telur-section');
             const ayamApkirSection = document.getElementById('ayam_apkir-section');
 
-            // Form elements
             const jenisTelurInput = document.getElementById('jenis_telur');
             const jumlahTelurInput = document.getElementById('jumlah_barang_keluar');
             const hargaKiloInput = document.getElementById('harga_kilo');
             const totalTelurInput = document.getElementById('total_harga');
+
             const jumlahAyamInput = document.getElementById('jumlah_ayam');
             const totalAyamInput = document.getElementById('total_harga_ayam');
 
-            // Set required berdasarkan jenis barang
-            function setRequiredFields() {
-                if (jenisBrg === 'telur') {
+            const selectedJenis = '{{ $data_barang_keluar->jenis_barang }}';
+
+            function toggleForm() {
+                if (jenisBarangSelect.value === 'telur') {
+                    telurSection.classList.remove('hidden');
+                    telurSection.classList.add('visible');
+
+                    ayamApkirSection.classList.add('hidden');
+                    ayamApkirSection.classList.remove('visible');
+
                     jenisTelurInput.required = true;
                     jumlahTelurInput.required = true;
                     hargaKiloInput.required = true;
+
                     jumlahAyamInput.required = false;
                     totalAyamInput.required = false;
+
                 } else {
+                    ayamApkirSection.classList.remove('hidden');
+                    ayamApkirSection.classList.add('visible');
+
+                    telurSection.classList.add('hidden');
+                    telurSection.classList.remove('visible');
+
                     jumlahAyamInput.required = true;
                     totalAyamInput.required = true;
+
                     jenisTelurInput.required = false;
                     jumlahTelurInput.required = false;
                     hargaKiloInput.required = false;
                 }
             }
 
-            setRequiredFields();
-
-            // TELUR CALCULATIONS
             function hitungTotalTelur() {
-                const gram = parseFloat(jumlahTelurInput.value) || 0;
-                const hargaKg = parseFloat(hargaKiloInput.value) || 0;
+                const gram = parseFloat(jumlahTelurInput.value.replace(/\./g, '')) || 0;
+                const hargaKg = parseFloat(hargaKiloInput.value.replace(/\./g, '')) || 0;
+
                 const total = (gram / 1000) * hargaKg;
-                totalTelurInput.value = Math.round(total);
+
+                totalTelurInput.value = new Intl.NumberFormat('id-ID')
+                    .format(Math.round(total));
             }
 
-            if (jenisBrg === 'telur') {
-                jumlahTelurInput.addEventListener('input', hitungTotalTelur);
-                hargaKiloInput.addEventListener('input', hitungTotalTelur);
+            function formatRibuan(input) {
+                input.addEventListener('input', function() {
+                    let angka = this.value.replace(/\D/g, '');
+
+                    if (angka === '') {
+                        this.value = '';
+                        return;
+                    }
+
+                    this.value = new Intl.NumberFormat('id-ID').format(angka);
+                });
+
+                input.form.addEventListener('submit', function() {
+                    input.value = input.value.replace(/\./g, '');
+                });
             }
+
+            jenisBarangSelect.addEventListener('change', toggleForm);
+
+            jumlahTelurInput.addEventListener('input', hitungTotalTelur);
+            hargaKiloInput.addEventListener('input', hitungTotalTelur);
+
+            formatRibuan(jumlahTelurInput);
+            formatRibuan(hargaKiloInput);
+            formatRibuan(totalTelurInput);
+
+            formatRibuan(jumlahAyamInput);
+            formatRibuan(totalAyamInput);
+
+            // trigger awal
+            toggleForm();
         });
     </script>
 @endsection

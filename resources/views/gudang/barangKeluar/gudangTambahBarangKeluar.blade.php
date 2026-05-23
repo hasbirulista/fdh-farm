@@ -109,6 +109,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -156,8 +157,8 @@
                 </div>
                 <div class="form-group">
                     <label for="nama_konsumen">Nama Konsumen</label>
-                    <input type="text" required name="nama_konsumen" id="nama_konsumen"
-                        placeholder="Nama Konsumen" value="{{ old('nama_konsumen') }}">
+                    <input type="text" required name="nama_konsumen" id="nama_konsumen" placeholder="Nama Konsumen"
+                        value="{{ old('nama_konsumen') }}">
                 </div>
             </div>
         </div>
@@ -171,7 +172,8 @@
                     <select required name="jenis_barang" id="jenis_barang">
                         <option value="" selected disabled>-- Pilih Jenis Barang --</option>
                         <option value="telur" {{ old('jenis_barang') == 'telur' ? 'selected' : '' }}>🥚 Telur</option>
-                        <option value="ayam_apkir" {{ old('jenis_barang') == 'ayam_apkir' ? 'selected' : '' }}>🐓 Ayam Apkir</option>
+                        <option value="ayam_apkir" {{ old('jenis_barang') == 'ayam_apkir' ? 'selected' : '' }}>🐓 Ayam Apkir
+                        </option>
                     </select>
                 </div>
             </div>
@@ -191,7 +193,7 @@
                 </div>
                 <div class="form-group">
                     <label for="jumlah_barang_keluar">Jumlah Telur (gram)</label>
-                    <input type="number" name="jumlah_barang_keluar" id="jumlah_barang_keluar"
+                    <input type="text" inputmode="numeric" name="jumlah_barang_keluar" id="jumlah_barang_keluar"
                         placeholder="Jumlah dalam gram" min="0" step="0.01"
                         value="{{ old('jumlah_barang_keluar') }}">
                 </div>
@@ -199,13 +201,12 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="harga_kilo">Harga per Kg</label>
-                    <input type="number" name="harga_kilo" id="harga_kilo"
-                        placeholder="Harga per Kg" min="0" step="0.01"
-                        value="{{ old('harga_kilo') }}">
+                    <input type="text" inputmode="numeric" name="harga_kilo" id="harga_kilo" placeholder="Harga per Kg"
+                        min="0" step="0.01" value="{{ old('harga_kilo') }}">
                 </div>
                 <div class="form-group">
                     <label for="total_harga">Total Harga</label>
-                    <input type="number" readonly id="total_harga" name="total_harga"
+                    <input type="text" inputmode="numeric" readonly id="total_harga" name="total_harga"
                         placeholder="Otomatis terhitung" value="{{ old('total_harga') }}">
                 </div>
             </div>
@@ -217,13 +218,12 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="jumlah_ayam">Jumlah Ayam (ekor)</label>
-                    <input type="number" name="jumlah_ayam" id="jumlah_ayam"
-                        placeholder="Jumlah dalam ekor" min="0"
-                        value="{{ old('jumlah_ayam') }}">
+                    <input type="text" inputmode="numeric" name="jumlah_ayam" id="jumlah_ayam"
+                        placeholder="Jumlah dalam ekor" min="0" value="{{ old('jumlah_ayam') }}">
                 </div>
                 <div class="form-group">
                     <label for="total_harga_ayam">Total Harga</label>
-                    <input type="number" name="total_harga_ayam" id="total_harga_ayam"
+                    <input type="text" inputmode="numeric" name="total_harga_ayam" id="total_harga_ayam"
                         placeholder="Masukkan total harga" min="0" step="0.01"
                         value="{{ old('total_harga_ayam') }}">
                 </div>
@@ -252,7 +252,7 @@
             const totalAyamInput = document.getElementById('total_harga_ayam');
 
             // Initialize visibility based on old value
-            const selectedJenis = '{{ old("jenis_barang") }}';
+            const selectedJenis = '{{ old('jenis_barang') }}';
             if (selectedJenis === 'telur') {
                 telurSection.classList.remove('hidden');
                 telurSection.classList.add('visible');
@@ -324,14 +324,48 @@
             const totalTelurInput = document.getElementById('total_harga');
 
             function hitungTotalTelur() {
-                const gram = parseFloat(jumlahTelurInput.value) || 0;
-                const hargaKg = parseFloat(hargaKiloInput.value) || 0;
+
+                const gram = parseFloat(
+                    jumlahTelurInput.value.replace(/\./g, '')
+                ) || 0;
+
+                const hargaKg = parseFloat(
+                    hargaKiloInput.value.replace(/\./g, '')
+                ) || 0;
+
                 const total = (gram / 1000) * hargaKg;
-                totalTelurInput.value = Math.round(total);
+
+                totalTelurInput.value = new Intl.NumberFormat('id-ID')
+                    .format(Math.round(total));
             }
 
             jumlahTelurInput.addEventListener('input', hitungTotalTelur);
             hargaKiloInput.addEventListener('input', hitungTotalTelur);
+
+            function formatRibuan(input) {
+
+                input.addEventListener('input', function() {
+
+                    let angka = this.value.replace(/\D/g, '');
+
+                    if (angka === '') {
+                        this.value = '';
+                        return;
+                    }
+
+                    this.value = new Intl.NumberFormat('id-ID').format(angka);
+                });
+
+                // sebelum submit hilangkan titik
+                input.form.addEventListener('submit', function() {
+                    input.value = input.value.replace(/\./g, '');
+                });
+            }
+
+            formatRibuan(jumlahTelurInput);
+            formatRibuan(hargaKiloInput);
+            formatRibuan(totalTelurInput);
+            formatRibuan(totalAyamInput);
         });
     </script>
 @endsection

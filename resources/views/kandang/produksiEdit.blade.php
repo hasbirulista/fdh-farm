@@ -361,8 +361,8 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="jumlah_gram" class="form-label">Jumlah Total Gram Telur</label>
-                    <input type="number" required name="jumlah_gram" class="form-control" min="0"
-                        value="{{ $data_produksi->jumlah_gram }}">
+                    <input type="text" inputmode="numeric" required name="jumlah_gram" id="jumlah_gram"
+                        class="form-control" min="0" value="{{ $data_produksi->jumlah_gram }}">
                 </div>
                 <div class="result-box">
                     <div class="result-box-label">📊 Persentase Produksi</div>
@@ -612,5 +612,28 @@
                 alert('Total persentase Grower + Layer harus 100%');
             }
         });
+
+        function formatRibuan(input) {
+
+            // Format realtime saat mengetik
+            input.addEventListener('input', function(e) {
+
+                let angka = this.value.replace(/\D/g, '');
+
+                if (angka === '') {
+                    this.value = '';
+                    return;
+                }
+
+                this.value = new Intl.NumberFormat('id-ID').format(angka);
+            });
+
+            // Sebelum form submit → hilangkan titik
+            input.form.addEventListener('submit', function() {
+                input.value = input.value.replace(/\./g, '');
+            });
+        }
+
+        formatRibuan(document.getElementById('jumlah_gram'));
     </script>
 @endsection

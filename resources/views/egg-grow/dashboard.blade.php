@@ -519,6 +519,11 @@
             new bootstrap.Modal(document.getElementById('profitModal')).show();
         }
 
+        function formatTanggalID(tanggal) {
+            const [y, m, d] = tanggal.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
         function loadProfit() {
             let tanggal = document.getElementById('profitDate').value;
 
@@ -526,7 +531,10 @@
                 .then(res => res.json())
                 .then(data => {
                     document.getElementById('profitValue').innerText = 'Rp ' + data.profit;
-                    document.getElementById('profitLabel').innerText = 'Profit ' + tanggal;
+
+                    document.getElementById('profitLabel').innerText =
+                        'Profit ' + formatTanggalID(tanggal);
+
                     bootstrap.Modal.getInstance(document.getElementById('profitModal')).hide();
                 });
         }

@@ -1,3 +1,7 @@
+@php
+    use Illuminate\Support\Facades\Auth;
+    $role = Auth::user()->role;
+@endphp
 @extends('partials.master')
 
 @section('content')
@@ -81,11 +85,11 @@
 
                 {{-- CETAK LAPORAN HARIAN --}}
                 @if ($tanggal)
-                    <a href="{{ route('pengeluaran.cetak', ['tanggal' => $tanggal, '_t' => time()]) }}"
-                        target="_blank" class="btn-custom print">
+                    <a href="{{ route('pengeluaran.cetak', ['tanggal' => $tanggal, '_t' => time()]) }}" target="_blank"
+                        class="btn-custom print">
                         🖨️ Cetak Harian
                     </a>
-                {{-- CETAK LAPORAN BULANAN --}}
+                    {{-- CETAK LAPORAN BULANAN --}}
                 @elseif ($bulan !== 'all')
                     <a href="{{ route('pengeluaran.cetak', ['bulan' => request('bulan'), 'tahun' => request('tahun'), '_t' => time()]) }}"
                         target="_blank" class="btn-custom print">
@@ -113,7 +117,7 @@
                     {{-- TANGGAL --}}
                     <div class="col-12 col-md-3">
                         <label class="fw-semibold small">Tanggal</label>
-                        <input type="date" name="tanggal" class="form-control form-control-sm" 
+                        <input type="date" name="tanggal" class="form-control form-control-sm"
                             value="{{ request('tanggal') }}" onchange="this.form.submit()">
                     </div>
 
@@ -138,7 +142,8 @@
                         <label class="fw-semibold small">Tahun</label>
                         <select name="tahun" class="form-select form-select-sm" onchange="this.form.submit()">
                             @for ($t = now()->year; $t >= now()->year - 5; $t--)
-                                <option value="{{ $t }}" {{ $tahun == $t ? 'selected' : '' }}>{{ $t }}
+                                <option value="{{ $t }}" {{ $tahun == $t ? 'selected' : '' }}>
+                                    {{ $t }}
                                 </option>
                             @endfor
                         </select>
@@ -187,15 +192,23 @@
                                     Rp {{ number_format($pengeluaran->total_harga, 0, ',', '.') }}
                                 </td>
                                 <td>
-                                    <a href="{{ route('gudang.editPengeluaran', $pengeluaran->id) }}"
-                                        class="btn btn-sm btn-warning mb-1">Edit</a>
-                                    <form action="/dashboard/gudang/pengeluaran/{{ $pengeluaran->id }}" method="POST"
-                                        style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger mb-1"
-                                            onclick="return confirm('Apakah Anda yakin ingin menghapus data pengeluaran ini?\n\nTanggal: {{ \Carbon\Carbon::parse($pengeluaran->tanggal)->format('d/m/Y') }}\nJenis: {{ ucfirst($pengeluaran->jenis_pengeluaran) }}\nNominal: Rp {{ number_format($pengeluaran->total_harga, 0, ',', '.') }}');">Hapus</button>
-                                    </form>
+                                    @php
+                                        $isToday = \Carbon\Carbon::parse($pengeluaran->tanggal)->isToday();
+                                    @endphp
+                                    @if ($role === 'owner' || $isToday)
+                                        <a href="{{ route('gudang.editPengeluaran', $pengeluaran->id) }}"
+                                            class="btn btn-sm btn-warning mb-1">
+                                            Edit
+                                        </a>
+
+                                        <form action="/dashboard/gudang/pengeluaran/{{ $pengeluaran->id }}" method="POST"
+                                            style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger mb-1"
+                                                onclick="return confirm('Apakah Anda yakin ingin menghapus data pengeluaran ini?\n\nTanggal: {{ \Carbon\Carbon::parse($pengeluaran->tanggal)->format('d/m/Y') }}\nJenis: {{ ucfirst($pengeluaran->jenis_pengeluaran) }}\nNominal: Rp {{ number_format($pengeluaran->total_harga, 0, ',', '.') }}');">Hapus</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

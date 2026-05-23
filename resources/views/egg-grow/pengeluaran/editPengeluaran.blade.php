@@ -119,6 +119,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -168,46 +169,55 @@
                 </div>
                 <div class="form-group">
                     <label for="tanggal">Tanggal</label>
-                    <input type="date" name="tanggal" id="tanggal" class="form-control"
-                        value="{{ old('tanggal', $data_pengeluaran->tanggal) }}" required>
+                    @if (auth()->user()->role !== 'owner')
+                        <input type="date" name="tanggal" id="tanggal" class="form-control" value="{{ old('tanggal', $data_pengeluaran->tanggal) }}" readonly required>
+                    @else
+                        <input type="date" name="tanggal" class="form-control" value="{{ old('tanggal', $data_pengeluaran->tanggal) }}" required>
+                    @endif
+                    {{-- <input type="date" name="tanggal" id="tanggal" class="form-control" value="{{ old('tanggal', $data_pengeluaran->tanggal) }}" required> --}}
                 </div>
             </div>
         </div>
 
         {{-- SECTION 2: TELUR PECAH --}}
-        <div id="formTelurPecah" class="form-section {{ $data_pengeluaran->jenis_pengeluaran === 'telur pecah' ? 'visible' : 'hidden' }}">
+        <div id="formTelurPecah"
+            class="form-section {{ $data_pengeluaran->jenis_pengeluaran === 'telur pecah' ? 'visible' : 'hidden' }}">
             <h5>🥚 Detail Telur Pecah</h5>
             <div class="form-row">
                 <div class="form-group">
                     <label for="jenis_telur">Jenis Telur</label>
                     <select id="jenis_telur" name="jenis_telur" class="form-select">
-                        <option value="Omega" {{ $data_pengeluaran->jenis_telur === 'Omega' ? 'selected' : '' }}>Omega</option>
-                        <option value="Biasa" {{ $data_pengeluaran->jenis_telur === 'Biasa' ? 'selected' : '' }}>Biasa</option>
+                        <option value="Omega" {{ $data_pengeluaran->jenis_telur === 'Omega' ? 'selected' : '' }}>Omega
+                        </option>
+                        <option value="Biasa" {{ $data_pengeluaran->jenis_telur === 'Biasa' ? 'selected' : '' }}>Biasa
+                        </option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="berat_total">Berat Total (gram)</label>
-                    <input type="number" id="berat_total" name="berat_total" class="form-control" 
+                    <input type="text" inputmode="numeric" id="berat_total" name="berat_total" class="form-control"
                         value="{{ old('berat_total', $data_pengeluaran->berat_total ?? '') }}" min="0">
                 </div>
                 <div class="form-group">
                     <label for="harga_kilo">Harga Beli Telur / KG</label>
-                    <input type="number" id="harga_kilo" name="harga_kilo" class="form-control" 
-                        placeholder="Harga per KG untuk kalkulasi" min="0" step="0.01">
+                    <input type="text" inputmode="numeric" id="harga_kilo" name="harga_kilo" class="form-control"
+                        placeholder="Harga per KG untuk kalkulasi" min="0" step="0.01"
+                        value="{{ old('harga_kilo', $data_pengeluaran->harga_kilo ?? '') }}">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label for="nominal_telur">Nominal (Rp)</label>
-                    <input type="number" id="nominal_telur" name="nominal_telur" class="form-control"
+                    <input type="text" inputmode="numeric" id="nominal_telur" name="nominal_telur" class="form-control"
                         value="{{ old('nominal_telur', $data_pengeluaran->nominal ?? '') }}" readonly>
                 </div>
             </div>
         </div>
 
         {{-- SECTION 3: LAINNYA --}}
-        <div id="formLainnya" class="form-section {{ $data_pengeluaran->jenis_pengeluaran === 'lainnya' ? 'visible' : 'hidden' }}">
+        <div id="formLainnya"
+            class="form-section {{ $data_pengeluaran->jenis_pengeluaran === 'lainnya' ? 'visible' : 'hidden' }}">
             <h5>📌 Detail Pengeluaran Lainnya</h5>
             <div class="form-row">
                 <div class="form-group">
@@ -218,7 +228,8 @@
                 </div>
                 <div class="form-group">
                     <label for="nominal_lainnya">Nominal (Rp)</label>
-                    <input type="number" id="nominal_lainnya" name="nominal_lainnya" class="form-control"
+                    <input type="text" inputmode="numeric" id="nominal_lainnya" name="nominal_lainnya"
+                        class="form-control"
                         value="{{ old('nominal_lainnya', $data_pengeluaran->jenis_pengeluaran === 'lainnya' ? $data_pengeluaran->nominal : '') }}"
                         placeholder="Masukkan nominal pengeluaran" min="0" step="0.01">
                 </div>
@@ -231,8 +242,8 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="keterangan">Keterangan (opsional)</label>
-                    <textarea name="keterangan" id="keterangan" class="form-control" 
-                        rows="3" placeholder="Tambahkan catatan jika diperlukan">{{ old('keterangan', $data_pengeluaran->keterangan ?? '') }}</textarea>
+                    <textarea name="keterangan" id="keterangan" class="form-control" rows="3"
+                        placeholder="Tambahkan catatan jika diperlukan">{{ old('keterangan', $data_pengeluaran->keterangan ?? '') }}</textarea>
                 </div>
             </div>
         </div>
@@ -262,10 +273,19 @@
 
         // Fungsi untuk menghitung nominal telur
         function hitungNominalTelur() {
-            const berat = parseFloat(beratTotal.value) || 0;
-            const harga = parseFloat(hargaKilo.value) || 0;
+
+            const berat = parseFloat(
+                beratTotal.value.replace(/\./g, '')
+            ) || 0;
+
+            const harga = parseFloat(
+                hargaKilo.value.replace(/\./g, '')
+            ) || 0;
+
             const nominal = (berat / 1000) * harga;
-            nominalTelur.value = Math.round(nominal);
+
+            nominalTelur.value = new Intl.NumberFormat('id-ID')
+                .format(Math.round(nominal));
         }
 
         // Event listener untuk auto-calculate hanya untuk telur pecah
@@ -280,6 +300,37 @@
         } else {
             namaPengeluaran.required = true;
             nominalLainnya.required = true;
+        }
+
+        function formatRibuan(input) {
+
+            // Format realtime saat mengetik
+            input.addEventListener('input', function(e) {
+
+                let angka = this.value.replace(/\D/g, '');
+
+                if (angka === '') {
+                    this.value = '';
+                    return;
+                }
+
+                this.value = new Intl.NumberFormat('id-ID').format(angka);
+            });
+
+            // Sebelum form submit → hilangkan titik
+            input.form.addEventListener('submit', function() {
+                input.value = input.value.replace(/\./g, '');
+            });
+        }
+
+        formatRibuan(document.getElementById('harga_kilo'));
+        formatRibuan(document.getElementById('nominal_lainnya'));
+        formatRibuan(document.getElementById('berat_total'));
+        formatRibuan(document.getElementById('nominal_telur'));
+
+        // Hitung otomatis saat load edit
+        if (jenisPengeluaran === 'telur pecah') {
+            hitungNominalTelur();
         }
     </script>
 @endsection

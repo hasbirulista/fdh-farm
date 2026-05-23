@@ -1,3 +1,7 @@
+@php
+    use Illuminate\Support\Facades\Auth;
+    $role = Auth::user()->role;
+@endphp
 @extends('partials.master')
 
 @section('content')
@@ -84,7 +88,7 @@
                         target="_blank" class="btn-custom print">
                         🖨️ Cetak Harian
                     </a>
-                {{-- CETAK LAPORAN BULANAN --}}
+                    {{-- CETAK LAPORAN BULANAN --}}
                 @elseif ($bulan && $bulan !== 'all')
                     <a href="{{ route('egg-grow.cetakPengeluaran', [
                         'bulan' => request('bulan'),
@@ -116,7 +120,7 @@
                     {{-- TANGGAL --}}
                     <div class="col-12 col-md-3">
                         <label class="fw-semibold small">Tanggal</label>
-                        <input type="date" name="tanggal" class="form-control form-control-sm" 
+                        <input type="date" name="tanggal" class="form-control form-control-sm"
                             value="{{ request('tanggal') }}" onchange="this.form.submit()">
                     </div>
 
@@ -193,12 +197,17 @@
                                 <td class="text-center">
                                     @if ($pengeluaran->jenis_pengeluaran !== 'beli telur')
                                         <div class="d-flex flex-column flex-md-row justify-content-center gap-1">
-                                            <a href="{{ route('egg-grow.editPengeluaran', $pengeluaran->id) }}"
-                                                class="btn btn-warning btn-sm w-100 w-md-auto mb-1 mb-md-0">Edit</a>
-                                            <button type="button" class="btn btn-danger btn-sm w-100 w-md-auto"
-                                                data-bs-toggle="modal" data-bs-target="#hapus{{ $pengeluaran->id }}">
-                                                Hapus
-                                            </button>
+                                            @php
+                                                $isToday = \Carbon\Carbon::parse($pengeluaran->tanggal)->isToday();
+                                            @endphp
+                                            @if ($role === 'owner' || $isToday)
+                                                <a href="{{ route('egg-grow.editPengeluaran', $pengeluaran->id) }}"
+                                                    class="btn btn-warning btn-sm w-100 w-md-auto mb-1 mb-md-0">Edit</a>
+                                                <button type="button" class="btn btn-danger btn-sm w-100 w-md-auto"
+                                                    data-bs-toggle="modal" data-bs-target="#hapus{{ $pengeluaran->id }}">
+                                                    Hapus
+                                                </button>
+                                            @endif
                                         </div>
                                     @else
                                         <span style="color: #999;">—</span>

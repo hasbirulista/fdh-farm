@@ -112,6 +112,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -144,6 +145,15 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <form action="{{ route('egg-grow.storePengeluaran') }}" method="POST">
         @csrf
@@ -162,7 +172,12 @@
                 </div>
                 <div class="form-group">
                     <label for="tanggal">Tanggal</label>
-                    <input type="date" name="tanggal" id="tanggal" class="form-control" required>
+                    @if (auth()->user()->role !== 'owner')
+                        <input type="date" name="tanggal" id="tanggal" class="form-control" value="{{ date('Y-m-d') }}"
+                            readonly required>
+                    @else
+                        <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    @endif
                 </div>
             </div>
         </div>
@@ -181,20 +196,20 @@
                 </div>
                 <div class="form-group">
                     <label for="berat_total">Berat Total (gram)</label>
-                    <input type="number" id="berat_total" name="berat_total" class="form-control" 
-                        placeholder="Berat dalam gram" min="0">
+                    <input type="text" id="berat_total" name="berat_total" class="form-control"
+                        placeholder="Berat dalam gram" min="0" inputmode="numeric">
                 </div>
                 <div class="form-group">
                     <label for="harga_kilo">Harga Beli Telur / KG</label>
-                    <input type="number" id="harga_kilo" name="harga_kilo" class="form-control" 
-                        placeholder="Harga per KG" min="0" step="0.01">
+                    <input type="text" id="harga_kilo" name="harga_kilo" class="form-control" placeholder="Harga per KG"
+                        inputmode="numeric" min="0" step="0.01">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label for="nominal_telur">Nominal (Rp)</label>
-                    <input type="number" id="nominal_telur" name="nominal_telur" class="form-control"
+                    <input type="text" id="nominal_telur" name="nominal_telur" class="form-control" inputmode="numeric"
                         placeholder="Otomatis terhitung" readonly>
                 </div>
             </div>
@@ -211,8 +226,8 @@
                 </div>
                 <div class="form-group">
                     <label for="nominal_lainnya">Nominal (Rp)</label>
-                    <input type="number" id="nominal_lainnya" name="nominal_lainnya" class="form-control"
-                        placeholder="Masukkan nominal pengeluaran" min="0" step="0.01">
+                    <input type="text" id="nominal_lainnya" name="nominal_lainnya" class="form-control"
+                        inputmode="numeric" placeholder="Masukkan nominal pengeluaran" min="0" step="0.01">
                 </div>
             </div>
         </div>
@@ -223,8 +238,8 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="keterangan">Keterangan (opsional)</label>
-                    <textarea name="keterangan" id="keterangan" class="form-control" 
-                        rows="3" placeholder="Tambahkan catatan jika diperlukan"></textarea>
+                    <textarea name="keterangan" id="keterangan" class="form-control" rows="3"
+                        placeholder="Tambahkan catatan jika diperlukan"></textarea>
                 </div>
             </div>
         </div>
@@ -253,10 +268,19 @@
 
         // Fungsi untuk menghitung nominal telur
         function hitungNominalTelur() {
-            const berat = parseFloat(beratTotal.value) || 0;
-            const harga = parseFloat(hargaKilo.value) || 0;
+
+            const berat = parseFloat(
+                beratTotal.value.replace(/\./g, '')
+            ) || 0;
+
+            const harga = parseFloat(
+                hargaKilo.value.replace(/\./g, '')
+            ) || 0;
+
             const nominal = (berat / 1000) * harga;
-            nominalTelur.value = Math.round(nominal);
+
+            nominalTelur.value = new Intl.NumberFormat('id-ID')
+                .format(Math.round(nominal));
         }
 
         // Event listener untuk auto-calculate
@@ -303,5 +327,30 @@
                 nominalLainnya.required = true;
             }
         });
+
+        function formatRibuan(input) {
+
+            // Format realtime saat mengetik
+            input.addEventListener('input', function(e) {
+
+                let angka = this.value.replace(/\D/g, '');
+
+                if (angka === '') {
+                    this.value = '';
+                    return;
+                }
+
+                this.value = new Intl.NumberFormat('id-ID').format(angka);
+            });
+
+            // Sebelum form submit → hilangkan titik
+            input.form.addEventListener('submit', function() {
+                input.value = input.value.replace(/\./g, '');
+            });
+        }
+
+        formatRibuan(document.getElementById('harga_kilo'));
+        formatRibuan(document.getElementById('nominal_lainnya'));
+        formatRibuan(document.getElementById('berat_total'));
     </script>
 @endsection

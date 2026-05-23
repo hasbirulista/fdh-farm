@@ -134,7 +134,13 @@
                 </div>
                 <div class="form-group">
                     <label for="tanggal_transaksi">Tanggal Transaksi</label>
-                    <input type="date" id="tanggal_transaksi" name="tanggal_transaksi" class="form-control" value="{{ $transaksi->tanggal_transaksi }}" required>
+                    @if (auth()->user()->role !== 'owner')
+                        <input type="date" name="tanggal_transaksi" id="tanggal" class="form-control" value="{{ $transaksi->tanggal_transaksi }}"
+                            readonly required>
+                    @else
+                        <input type="date" name="tanggal_transaksi" class="form-control" value="{{ $transaksi->tanggal_transaksi }}" required>
+                    @endif
+                    {{-- <input type="date" id="tanggal_transaksi" name="tanggal_transaksi" class="form-control" value="{{ $transaksi->tanggal_transaksi }}" required> --}}
                 </div>
             </div>
         </div>
@@ -156,7 +162,7 @@
                 </div>
                 <div class="form-group">
                     <label for="total_berat">Total Berat (gr)</label>
-                    <input type="number" id="total_berat" name="total_berat" class="form-control" value="{{ $transaksi->total_berat }}" required>
+                    <input type="text" inputmode="numeric" id="total_berat" name="total_berat" class="form-control" value="{{ $transaksi->total_berat }}" required>
                 </div>
             </div>
         </div>
@@ -167,15 +173,15 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="harga_beli_kilo">Harga Beli / Kg</label>
-                    <input type="number" id="harga_beli_kilo" name="harga_beli_kilo" class="form-control" value="{{ $transaksi->harga_beli_kilo }}" required>
+                    <input type="text" inputmode="numeric" id="harga_beli_kilo" name="harga_beli_kilo" class="form-control" value="{{ $transaksi->harga_beli_kilo }}" required>
                 </div>
                 <div class="form-group">
                     <label for="harga_jual_kilo">Harga Jual / Kg</label>
-                    <input type="number" id="harga_jual_kilo" name="harga_jual_kilo" class="form-control" value="{{ $transaksi->harga_jual_kilo }}" required>
+                    <input type="text" inputmode="numeric" id="harga_jual_kilo" name="harga_jual_kilo" class="form-control" value="{{ $transaksi->harga_jual_kilo }}" required>
                 </div>
                 <div class="form-group">
                     <label for="total_harga">Total Harga (Rp)</label>
-                    <input type="number" id="total_harga" name="total_harga" class="form-control" value="{{ $transaksi->total_harga }}" readonly>
+                    <input type="text" inputmode="numeric" id="total_harga" name="total_harga" class="form-control" value="{{ $transaksi->total_harga }}" readonly>
                 </div>
             </div>
         </div>
@@ -212,14 +218,47 @@
         const totalHargaInput = document.getElementById('total_harga');
 
         function hitungTotalHarga() {
-            const gram = parseFloat(totalBeratInput.value) || 0;
-            const hargaKg = parseFloat(hargaJualInput.value) || 0;
+
+            const gram = parseFloat(
+                totalBeratInput.value.replace(/\./g, '')
+            ) || 0;
+
+            const hargaKg = parseFloat(
+                hargaJualInput.value.replace(/\./g, '')
+            ) || 0;
 
             const total = (gram / 1000) * hargaKg;
-            totalHargaInput.value = Math.round(total);
+
+            totalHargaInput.value = new Intl.NumberFormat('id-ID')
+                .format(Math.round(total));
         }
 
         totalBeratInput.addEventListener('input', hitungTotalHarga);
         hargaJualInput.addEventListener('input', hitungTotalHarga);
+
+        function formatRibuan(input) {
+
+            // Format realtime saat mengetik
+            input.addEventListener('input', function(e) {
+
+                let angka = this.value.replace(/\D/g, '');
+
+                if (angka === '') {
+                    this.value = '';
+                    return;
+                }
+
+                this.value = new Intl.NumberFormat('id-ID').format(angka);
+            });
+
+            // Sebelum form submit → hilangkan titik
+            input.form.addEventListener('submit', function() {
+                input.value = input.value.replace(/\./g, '');
+            });
+        }
+
+        formatRibuan(document.getElementById('total_berat'));
+        formatRibuan(document.getElementById('harga_beli_kilo'));
+        formatRibuan(document.getElementById('harga_jual_kilo'));
     </script>
 @endsection

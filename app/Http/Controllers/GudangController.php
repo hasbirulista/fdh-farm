@@ -1148,6 +1148,13 @@ class GudangController extends Controller
 
     public function storePengeluaran(Request $request)
     {
+        $request->merge([
+            'berat_total' => str_replace('.', '', $request->berat_total),
+            'harga_kilo' => str_replace('.', '', $request->harga_kilo),
+            'total_harga' => str_replace('.', '', $request->total_harga),
+            'nominal_lainnya' => str_replace('.', '', $request->nominal_lainnya),
+        ]);
+
         // 1️⃣ VALIDASI DINAMIS
         $baseRules = [
             'tanggal' => 'required|date',
@@ -1170,8 +1177,11 @@ class GudangController extends Controller
 
         $request->validate($rules);
 
+        // Jika bukan owner, tanggal otomatis hari ini
+        $tanggal = auth()->user()->role !== 'owner' ? now()->toDateString(): $request->tanggal;
+
         try {
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request, $tanggal) {
 
                 // Ambil saldo gudang
                 $saldo = Saldo::lockForUpdate()
@@ -1188,7 +1198,7 @@ class GudangController extends Controller
 
                 // Simpan pengeluaran
                 Pengeluaran::create([
-                    'tanggal' => $request->tanggal,
+                    'tanggal' => $tanggal,
                     'jenis_pengeluaran' => $request->jenis_pengeluaran,
                     'jenis_pakan' => $request->jenis_pengeluaran === 'pakan' ? $request->jenis_pakan : null,
                     'berat_total' => $request->jenis_pengeluaran === 'pakan' ? $request->berat_total : null,
@@ -1201,7 +1211,7 @@ class GudangController extends Controller
                 if ($request->jenis_pengeluaran === 'pakan') {
                     // Simpan ke tb_pakan_masuk (selalu create baru)
                     PakanMasuk::create([
-                        'tanggal_pakan_masuk' => $request->tanggal,
+                        'tanggal_pakan_masuk' => $tanggal,
                         'jenis_pakan' => $request->jenis_pakan,
                         'berat_total' => ($request->berat_total * 1000),
                         'harga_kilo' => $request->harga_kilo,
@@ -1238,6 +1248,13 @@ class GudangController extends Controller
     {
         $pengeluaran = Pengeluaran::findOrFail($id);
 
+        if (
+        auth()->user()->role !== 'owner' &&
+            !\Carbon\Carbon::parse($pengeluaran->tanggal)->isToday()
+        ) {
+            abort(403, 'Anda tidak memiliki akses');
+        }
+
         return view('gudang.pengeluaran.editPengeluaran', [
             'page' => 'Gudang',
             'pengeluaran' => $pengeluaran,
@@ -1246,6 +1263,12 @@ class GudangController extends Controller
 
     public function updatePengeluaran(Request $request, $id)
     {
+        $request->merge([
+            'berat_total' => str_replace('.', '', $request->berat_total),
+            'harga_kilo' => str_replace('.', '', $request->harga_kilo),
+            'total_harga' => str_replace('.', '', $request->total_harga),
+            'nominal_lainnya' => str_replace('.', '', $request->nominal_lainnya),
+        ]);
         $pengeluaran = Pengeluaran::findOrFail($id);
 
         // 1️⃣ VALIDASI DINAMIS

@@ -17,7 +17,7 @@
             padding: 30px 20px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
         }
 
         .header-section h2 {
@@ -33,13 +33,13 @@
             padding: 30px;
             margin-bottom: 30px;
             border-left: 5px solid var(--primary);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .form-section:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
         }
 
         .form-section-title {
@@ -79,7 +79,8 @@
             letter-spacing: 0.5px;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             border: 2px solid var(--border-light);
             border-radius: 8px;
             padding: 12px 15px;
@@ -88,7 +89,8 @@
             background-color: #fafafa;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             outline: none;
             border-color: var(--primary);
             background-color: white;
@@ -178,7 +180,12 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tanggal</label>
-                        <input type="date" name="tanggal" class="form-control" required>
+                        @if (auth()->user()->role !== 'owner')
+                            <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" readonly
+                                required>
+                        @else
+                            <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -201,7 +208,8 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Jumlah Sak/Karung</label>
-                            <input type="number" id="jumlah_sak" class="form-control" placeholder="Contoh: 10" min="0">
+                            <input type="text" inputmode="numeric" id="jumlah_sak" class="form-control"
+                                placeholder="Contoh: 10" min="0">
                             <small class="form-text">1 sak = 50kg</small>
                         </div>
                     </div>
@@ -209,15 +217,18 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Berat Total (kg) - Otomatis</label>
-                            <input type="number" id="berat_total" name="berat_total" class="form-control" placeholder="Akan terisi otomatis" readonly>
+                            <input type="text" inputmode="numeric" id="berat_total" name="berat_total"
+                                class="form-control" placeholder="Akan terisi otomatis" readonly>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Harga / Kg</label>
-                            <input type="number" id="harga_kilo" name="harga_kilo" class="form-control" placeholder="Contoh: 5000">
+                            <input type="text" inputmode="numeric" id="harga_kilo" name="harga_kilo" class="form-control"
+                                placeholder="Contoh: 5000">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Total Harga - Otomatis</label>
-                            <input type="number" id="total_harga" name="total_harga" class="form-control" placeholder="Akan terisi otomatis" readonly>
+                            <input type="text" inputmode="numeric" id="total_harga" name="total_harga"
+                                class="form-control" placeholder="Akan terisi otomatis" readonly>
                         </div>
                     </div>
                 </div>
@@ -238,8 +249,8 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Nominal</label>
-                            <input type="number" id="nominal_lainnya" name="nominal_lainnya" class="form-control"
-                                placeholder="Nominal pengeluaran">
+                            <input type="text" inputmode="numeric" id="nominal_lainnya" name="nominal_lainnya"
+                                class="form-control" placeholder="Nominal pengeluaran">
                         </div>
                     </div>
                 </div>
@@ -279,8 +290,17 @@
         const namaPengeluaran = document.getElementById('nama_pengeluaran');
         const nominalLainnya = document.getElementById('nominal_lainnya');
 
+        function angkaAsli(value) {
+            return parseInt(value.replace(/\./g, '')) || 0;
+        }
+
+        function formatAngka(value) {
+            return new Intl.NumberFormat('id-ID').format(value);
+        }
+
         function toggleForm() {
             if (jenisPengeluaran.value === 'pakan') {
+
                 formPakan.classList.remove('d-none');
                 formLainnya.classList.add('d-none');
 
@@ -290,9 +310,12 @@
 
                 namaPengeluaran.required = false;
                 nominalLainnya.required = false;
+
                 namaPengeluaran.value = '';
                 nominalLainnya.value = '';
+
             } else {
+
                 formPakan.classList.add('d-none');
                 formLainnya.classList.remove('d-none');
 
@@ -312,21 +335,60 @@
         }
 
         function hitungBeratDariSak() {
-            const sak = parseFloat(jumlahSak.value) || 0;
-            const beratTotal = sak * 50; // 1 sak = 50kg
-            berat.value = beratTotal > 0 ? beratTotal : '';
+
+            const sak = angkaAsli(jumlahSak.value);
+
+            const beratTotal = sak * 50;
+
+            berat.value = beratTotal > 0 ?
+                formatAngka(beratTotal) :
+                '';
+
             hitungTotal();
         }
 
         function hitungTotal() {
-            const kilo = parseFloat(berat.value) || 0;
-            const hargaKg = parseFloat(harga.value) || 0;
-            total.value = Math.round(kilo * hargaKg);
+
+            const kilo = angkaAsli(berat.value);
+            const hargaKg = angkaAsli(harga.value);
+
+            const hasil = kilo * hargaKg;
+
+            total.value = hasil > 0 ?
+                formatAngka(Math.round(hasil)) :
+                '';
+        }
+
+        function formatRibuan(input) {
+
+            input.addEventListener('input', function() {
+
+                let angka = this.value.replace(/\D/g, '');
+
+                if (angka === '') {
+                    this.value = '';
+                    return;
+                }
+
+                this.value = formatAngka(angka);
+            });
+
+            input.form.addEventListener('submit', function() {
+
+                input.value = input.value.replace(/\./g, '');
+            });
         }
 
         jenisPengeluaran.addEventListener('change', toggleForm);
+
         jumlahSak.addEventListener('input', hitungBeratDariSak);
-        berat.addEventListener('input', hitungTotal);
+
         harga.addEventListener('input', hitungTotal);
+
+        formatRibuan(jumlahSak);
+        formatRibuan(harga);
+        formatRibuan(total);
+        formatRibuan(berat);
+        formatRibuan(nominalLainnya);
     </script>
 @endsection

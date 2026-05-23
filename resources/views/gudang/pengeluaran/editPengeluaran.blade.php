@@ -17,7 +17,7 @@
             padding: 30px 20px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
         }
 
         .header-section h2 {
@@ -33,13 +33,13 @@
             padding: 30px;
             margin-bottom: 30px;
             border-left: 5px solid var(--primary);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .form-section:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
         }
 
         .form-section-title {
@@ -79,7 +79,8 @@
             letter-spacing: 0.5px;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             border: 2px solid var(--border-light);
             border-radius: 8px;
             padding: 12px 15px;
@@ -88,7 +89,8 @@
             background-color: #fafafa;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             outline: none;
             border-color: var(--primary);
             background-color: white;
@@ -172,13 +174,23 @@
                     <div class="form-group">
                         <label class="form-label">Jenis Pengeluaran</label>
                         <select id="jenis_pengeluaran" name="jenis_pengeluaran" class="form-select" required>
-                            <option value="pakan" {{ $pengeluaran->jenis_pengeluaran === 'pakan' ? 'selected' : '' }}>Pakan</option>
-                            <option value="lainnya" {{ $pengeluaran->jenis_pengeluaran === 'lainnya' ? 'selected' : '' }}>Lainnya</option>
+                            <option value="pakan" {{ $pengeluaran->jenis_pengeluaran === 'pakan' ? 'selected' : '' }}>Pakan
+                            </option>
+                            <option value="lainnya" {{ $pengeluaran->jenis_pengeluaran === 'lainnya' ? 'selected' : '' }}>
+                                Lainnya</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tanggal</label>
-                        <input type="date" name="tanggal" class="form-control" required value="{{ $pengeluaran->tanggal }}">
+                        @if (auth()->user()->role !== 'owner')
+                            <input type="date" name="tanggal" id="tanggal" class="form-control"
+                                value="{{ $pengeluaran->tanggal }}" readonly required>
+                        @else
+                            <input type="date" name="tanggal" class="form-control"
+                                value="{{ $pengeluaran->tanggal }}" required>
+                        @endif
+                        {{-- <input type="date" name="tanggal" class="form-control" required
+                            value="{{ $pengeluaran->tanggal }}"> --}}
                     </div>
                 </div>
             </div>
@@ -194,14 +206,17 @@
                         <div class="form-group">
                             <label class="form-label">Jenis Pakan</label>
                             <select id="jenis_pakan" name="jenis_pakan" class="form-select">
-                                <option value="Grower" {{ $pengeluaran->jenis_pakan === 'Grower' ? 'selected' : '' }}>Grower</option>
-                                <option value="Layer" {{ $pengeluaran->jenis_pakan === 'Layer' ? 'selected' : '' }}>Layer</option>
+                                <option value="Grower" {{ $pengeluaran->jenis_pakan === 'Grower' ? 'selected' : '' }}>Grower
+                                </option>
+                                <option value="Layer" {{ $pengeluaran->jenis_pakan === 'Layer' ? 'selected' : '' }}>Layer
+                                </option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Jumlah Sak/Karung</label>
-                            <input type="number" id="jumlah_sak" class="form-control" placeholder="Contoh: 10" min="0"
-                                value="{{ $pengeluaran->jenis_pengeluaran === 'pakan' ? ($pengeluaran->berat_total / 50) : '' }}">
+                            <input type="text" inputmode="numeric" id="jumlah_sak" class="form-control"
+                                placeholder="Contoh: 10" min="0"
+                                value="{{ $pengeluaran->jenis_pengeluaran === 'pakan' ? $pengeluaran->berat_total / 50 : '' }}">
                             <small class="form-text">1 sak = 50kg</small>
                         </div>
                     </div>
@@ -209,17 +224,19 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Berat Total (kg) - Otomatis</label>
-                            <input type="number" id="berat_total" name="berat_total" class="form-control" placeholder="Akan terisi otomatis" readonly
+                            <input type="text" inputmode="numeric" id="berat_total" name="berat_total"
+                                class="form-control" placeholder="Akan terisi otomatis" readonly
                                 value="{{ $pengeluaran->berat_total }}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Harga / Kg</label>
-                            <input type="number" id="harga_kilo" name="harga_kilo" class="form-control" placeholder="Contoh: 5000"
-                                value="{{ $pengeluaran->harga_kilo }}">
+                            <input type="text" inputmode="numeric" id="harga_kilo" name="harga_kilo" class="form-control"
+                                placeholder="Contoh: 5000" value="{{ $pengeluaran->harga_kilo }}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Total Harga - Otomatis</label>
-                            <input type="number" id="total_harga" name="total_harga" class="form-control" placeholder="Akan terisi otomatis" readonly
+                            <input type="text" inputmode="numeric" id="total_harga" name="total_harga"
+                                class="form-control" placeholder="Akan terisi otomatis" readonly
                                 value="{{ $pengeluaran->total_harga }}">
                         </div>
                     </div>
@@ -237,12 +254,13 @@
                         <div class="form-group">
                             <label class="form-label">Nama Pengeluaran</label>
                             <input type="text" id="nama_pengeluaran" name="nama_pengeluaran" class="form-control"
-                                placeholder="Contoh: Listrik, Obat, Perbaikan" value="{{ $pengeluaran->nama_pengeluaran }}">
+                                placeholder="Contoh: Listrik, Obat, Perbaikan"
+                                value="{{ $pengeluaran->nama_pengeluaran }}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Nominal</label>
-                            <input type="number" id="nominal_lainnya" name="nominal_lainnya" class="form-control"
-                                placeholder="Nominal pengeluaran"
+                            <input type="text" inputmode="numeric" id="nominal_lainnya" name="nominal_lainnya"
+                                class="form-control" placeholder="Nominal pengeluaran"
                                 value="{{ $pengeluaran->jenis_pengeluaran === 'lainnya' ? $pengeluaran->total_harga : '' }}">
                         </div>
                     </div>
@@ -283,8 +301,18 @@
         const namaPengeluaran = document.getElementById('nama_pengeluaran');
         const nominalLainnya = document.getElementById('nominal_lainnya');
 
+        function angkaAsli(value) {
+            return parseInt(value.toString().replace(/\./g, '')) || 0;
+        }
+
+        function formatAngka(value) {
+            return new Intl.NumberFormat('id-ID').format(value);
+        }
+
         function toggleForm() {
+
             if (jenisPengeluaran.value === 'pakan') {
+
                 formPakan.classList.remove('d-none');
                 formLainnya.classList.add('d-none');
 
@@ -294,9 +322,12 @@
 
                 namaPengeluaran.required = false;
                 nominalLainnya.required = false;
+
                 namaPengeluaran.value = '';
                 nominalLainnya.value = '';
+
             } else {
+
                 formPakan.classList.add('d-none');
                 formLainnya.classList.remove('d-none');
 
@@ -316,22 +347,82 @@
         }
 
         function hitungBeratDariSak() {
-            const sak = parseFloat(jumlahSak.value) || 0;
-            const beratTotal = sak * 50; // 1 sak = 50kg
-            berat.value = beratTotal > 0 ? beratTotal : '';
+
+            const sak = angkaAsli(jumlahSak.value);
+
+            const beratTotal = sak * 50;
+
+            berat.value = beratTotal > 0 ?
+                formatAngka(beratTotal) :
+                '';
+
             hitungTotal();
         }
 
         function hitungTotal() {
-            const kilo = parseFloat(berat.value) || 0;
-            const hargaKg = parseFloat(harga.value) || 0;
-            total.value = Math.round(kilo * hargaKg);
+
+            const kilo = angkaAsli(berat.value);
+
+            const hargaKg = angkaAsli(harga.value);
+
+            const hasil = kilo * hargaKg;
+
+            total.value = hasil > 0 ?
+                formatAngka(Math.round(hasil)) :
+                '';
+        }
+
+        function formatRibuan(input) {
+
+            input.addEventListener('input', function() {
+
+                let angka = this.value.replace(/\D/g, '');
+
+                if (angka === '') {
+                    this.value = '';
+                    return;
+                }
+
+                this.value = formatAngka(angka);
+            });
+
+            input.form.addEventListener('submit', function() {
+
+                input.value = input.value.replace(/\./g, '');
+            });
         }
 
         jenisPengeluaran.addEventListener('change', toggleForm);
-        jumlahSak.addEventListener('input', hitungBeratDariSak);
-        berat.addEventListener('input', hitungTotal);
-        harga.addEventListener('input', hitungTotal);
-    </script>
 
+        jumlahSak.addEventListener('input', hitungBeratDariSak);
+
+        harga.addEventListener('input', hitungTotal);
+
+        formatRibuan(jumlahSak);
+        formatRibuan(berat);
+        formatRibuan(harga);
+        formatRibuan(total);
+        formatRibuan(nominalLainnya);
+
+        // Format value awal dari database
+        if (jumlahSak.value) {
+            jumlahSak.value = formatAngka(angkaAsli(jumlahSak.value));
+        }
+
+        if (berat.value) {
+            berat.value = formatAngka(angkaAsli(berat.value));
+        }
+
+        if (harga.value) {
+            harga.value = formatAngka(angkaAsli(harga.value));
+        }
+
+        if (total.value) {
+            total.value = formatAngka(angkaAsli(total.value));
+        }
+
+        if (nominalLainnya.value) {
+            nominalLainnya.value = formatAngka(angkaAsli(nominalLainnya.value));
+        }
+    </script>
 @endsection

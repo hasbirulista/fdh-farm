@@ -104,6 +104,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -156,7 +157,8 @@
                     <select id="pelanggan_id" name="pelanggan_id" required>
                         <option value="" disabled selected>Pilih Pelanggan</option>
                         @foreach ($pelanggans as $pelanggan)
-                            <option value="{{ $pelanggan->id }}" {{ old('pelanggan_id') == $pelanggan->id ? 'selected' : '' }}>
+                            <option value="{{ $pelanggan->id }}"
+                                {{ old('pelanggan_id') == $pelanggan->id ? 'selected' : '' }}>
                                 {{ $pelanggan->nama_pelanggan }}
                             </option>
                         @endforeach
@@ -164,7 +166,8 @@
                 </div>
                 <div class="form-group">
                     <label for="tanggal_transaksi">Tanggal Transaksi</label>
-                    <input type="date" id="tanggal_transaksi" name="tanggal_transaksi" value="{{ old('tanggal_transaksi') }}" required>
+                    <input type="date" id="tanggal_transaksi" name="tanggal_transaksi"
+                        value="{{ old('tanggal_transaksi') }}" required>
                 </div>
             </div>
         </div>
@@ -183,7 +186,8 @@
                 </div>
                 <div class="form-group">
                     <label for="total_berat">Total Berat (gr)</label>
-                    <input type="number" id="total_berat" name="total_berat" placeholder="0" value="{{ old('total_berat') }}" required>
+                    <input type="text" inputmode="numeric" id="total_berat" name="total_berat" placeholder="0"
+                        value="{{ old('total_berat') }}" required>
                 </div>
             </div>
         </div>
@@ -194,15 +198,18 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="harga_beli_kilo">Harga Beli / Kg</label>
-                    <input type="number" id="harga_beli_kilo" name="harga_beli_kilo" placeholder="0" value="{{ old('harga_beli_kilo') }}" required>
+                    <input type="text" inputmode="numeric" id="harga_beli_kilo" name="harga_beli_kilo" placeholder="0"
+                        value="{{ old('harga_beli_kilo') }}" required>
                 </div>
                 <div class="form-group">
                     <label for="harga_jual_kilo">Harga Jual / Kg</label>
-                    <input type="number" id="harga_jual_kilo" name="harga_jual_kilo" placeholder="0" value="{{ old('harga_jual_kilo') }}" required>
+                    <input type="text" inputmode="numeric" id="harga_jual_kilo" name="harga_jual_kilo" placeholder="0"
+                        value="{{ old('harga_jual_kilo') }}" required>
                 </div>
                 <div class="form-group">
                     <label for="total_harga">Total Harga (Rp)</label>
-                    <input type="number" id="total_harga" name="total_harga" placeholder="0" value="{{ old('total_harga') }}" readonly>
+                    <input type="text" inputmode="numeric" id="total_harga" name="total_harga" placeholder="0"
+                        value="{{ old('total_harga') }}" readonly>
                 </div>
             </div>
         </div>
@@ -232,13 +239,47 @@
         const totalHargaInput = document.getElementById('total_harga');
 
         function hitungTotalHarga() {
-            const gram = parseFloat(totalBeratInput.value) || 0;
-            const hargaKg = parseFloat(hargaJualInput.value) || 0;
+
+            const gram = parseFloat(
+                totalBeratInput.value.replace(/\./g, '')
+            ) || 0;
+
+            const hargaKg = parseFloat(
+                hargaJualInput.value.replace(/\./g, '')
+            ) || 0;
 
             const total = (gram / 1000) * hargaKg;
-            totalHargaInput.value = Math.round(total);
+
+            totalHargaInput.value = new Intl.NumberFormat('id-ID')
+                .format(Math.round(total));
         }
 
         totalBeratInput.addEventListener('input', hitungTotalHarga);
-        hargaJualInput.addEventListener('input', hitungTotalHarga);    </script>
+        hargaJualInput.addEventListener('input', hitungTotalHarga);
+
+        function formatRibuan(input) {
+
+            // Format realtime saat mengetik
+            input.addEventListener('input', function(e) {
+
+                let angka = this.value.replace(/\D/g, '');
+
+                if (angka === '') {
+                    this.value = '';
+                    return;
+                }
+
+                this.value = new Intl.NumberFormat('id-ID').format(angka);
+            });
+
+            // Sebelum form submit → hilangkan titik
+            input.form.addEventListener('submit', function() {
+                input.value = input.value.replace(/\./g, '');
+            });
+        }
+
+        formatRibuan(document.getElementById('total_berat'));
+        formatRibuan(document.getElementById('harga_beli_kilo'));
+        formatRibuan(document.getElementById('harga_jual_kilo'));
+    </script>
 @endsection
